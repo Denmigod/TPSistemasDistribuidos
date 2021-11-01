@@ -4,6 +4,7 @@ import "../src/css/App.css";
 import { Fragment, useState } from "react";
 import ParticleBackground from "./components/ParticleBackground";
 import ListadoArchivos from "./components/ListadoArchivos";
+import Footer from "./components/Footer";
 
 function App() {
   const [listado, setListado] = useState([
@@ -23,10 +24,10 @@ function App() {
           <button className="button-primary">Cargar Archivo</button>
         </div>
         <div className="container list-c">
-
-        <ListadoArchivos listado={listado} />
+          <ListadoArchivos listado={listado} />
         </div>
       </div>
+    
     </Fragment>
   );
 }
