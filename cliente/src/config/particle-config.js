@@ -8,7 +8,7 @@ const particlesConfig = {
       },
     },
     color: {
-      value: "#ffffff",
+      value: "#39A6A3",
     },
     shape: {
       type: "circle",
@@ -36,7 +36,7 @@ const particlesConfig = {
       },
     },
     size: {
-      value: 3,
+      value: 6,
       random: true,
       anim: {
         enable: false,
@@ -48,7 +48,7 @@ const particlesConfig = {
     line_linked: {
       enable: true,
       distance: 150,
-      color: "#ffffff",
+      color: "#DEEEEA",
       opacity: 0.4,
       width: 1,
     },
@@ -71,12 +71,12 @@ const particlesConfig = {
     detect_on: "canvas",
     events: {
       onhover: {
-        enable: true,
+        enable: false,
         mode: "repulse",
       },
       onclick: {
         enable: true,
-        mode: "push",
+        mode: "repulse",
       },
       resize: true,
     },
