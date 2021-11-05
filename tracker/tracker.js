@@ -52,6 +52,9 @@ function createTrackerServer(config) {
     if (obj.route.indexOf('scan') != -1){
       scan(msg);
     }
+    if (obj.route.indexOf('count') != -1){
+      count(msg);
+    }
     if (obj.route.length == 46){ //longitud exacta de cualquier ruta del tipo file/{hash}
       search(msg);
     }
@@ -186,6 +189,27 @@ function store(msg) {
   }
   else if ((tracker.sig.port != null) && (tracker.sig.host != null)) {
     server.send(msg, tracker.sig.port, tracker.sig.host);
+  }
+}
+
+function count(msg) {
+  let obj = JSON.parse(msg);
+  let response = { ...obj };
+  if(response.messageId == `countId=${tracker.id}`) {  //ya se completo el recorrido de todos los trackers
+    server.send(JSON.stringify(response), response.originPort, response.originIP);
+  }
+  else {
+    if(response.messageId.length<=8){ //es el primer tracker que se marcara para recorrer todos los nodos scaneando
+      response.messageId = `countId=${tracker.id}`;
+    }
+    obj.body.trackerCount += 1;
+    for (let index=tracker.min_range; index<=tracker.max_range; index++){ //añado todos los archivos guardados en este dominio
+      let arrayoffiles = tracker.diccionario[index];
+      if(!(typeof arrayoffiles === 'undefined')) {  //chequeo que el dominio este inicializado (buscar si hay una mejor forma de chequearlo)
+        arrayoffiles.forEach(element => { obj.body.fileCount += 1; });
+      }
+    }
+    server.send(JSON.stringify(response), tracker.sig.port, tracker.sig.host);
   }
 }
 
