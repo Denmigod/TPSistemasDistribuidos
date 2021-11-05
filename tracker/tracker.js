@@ -17,6 +17,8 @@ function crearTracker() {
     //diccionario: new Map(),
     diccionario: [],
     id: config.id,
+    host: config.host,
+    port: config.port,
     server: server
   };
 
@@ -47,7 +49,12 @@ function createTrackerServer(config) {
     if (obj.route.indexOf('store') != -1){
       store(msg);
     }
-
+    if (obj.route.indexOf('scan') != -1){
+      scan(msg);
+    }
+    if (obj.route.length == 46){ //longitud exacta de cualquier ruta del tipo file/{hash}
+      search(msg);
+    }
     //server.send('Stored succesfull in node ' + config.id, remotePort, remoteAddress);
   });
 
@@ -76,6 +83,68 @@ function setStaticRange(config) {
   return range;
 }
 
+function search(msg) {
+  let obj = JSON.parse(msg);
+  let hash = obj.route.slice(6); //obtiene el hash de la ruta
+  let index = parseInt(hash.slice(0, 2), 16);
+  if ((tracker.min_range <= index) && (tracker.max_range >= index)) {
+    let arrayoffiles = tracker.diccionario[index];
+    let indexedfile = arrayoffiles.filter(function (fileinfo) { //filtra si existe un archivo con el mismo hash
+      return fileinfo.hash == hash;
+    });
+    let peers = indexedfile[0].peers;
+    found(msg, hash, peers);
+  } else {
+    server.send(msg, tracker.sig.port, tracker.sig.host);
+  }
+}
+
+function found(msg, hash, peers){
+  let obj = JSON.parse(msg);
+  let response = {
+    messageId: obj.messageId,
+    route: `/file/${hash}`,
+    originIP: obj.originIP,
+    originPort: obj.originPort,
+    body: {
+        id: hash,
+        trackerIP: tracker.host,
+        trackerPort: tracker.port,
+        pares: peers
+    }
+  }
+  server.send(response, obj.originIP, obj.originPort); //Envia lo encontrado al servidor
+}
+
+function scan(msg) {
+  let obj = JSON.parse(msg);
+  let response = { ...obj };
+  if(response.messageId == `scanId=${tracker.id}`) {  //ya se completo el recorrido de todos los trackers
+    server.send(JSON.stringify(response), response.originPort, response.originIP);
+  }
+  else {
+    if(response.messageId.length<=7){ //es el primer tracker que se marcara para recorrer todos los nodos scaneando
+      response.messageId = `scanId=${tracker.id}`;
+    }
+    let files = obj.body.files;
+    for (let index=tracker.min_range; index<=tracker.max_range; index++){ //añado todos los archivos guardados en este dominio
+      let arrayoffiles = tracker.diccionario[index];
+      if(!(typeof arrayoffiles === 'undefined')) {  //chequeo que el dominio este inicializado (buscar si hay una mejor forma de chequearlo)
+        arrayoffiles.forEach(element => {
+          files.push({
+            id: element.hash,
+            filename: element.filename,
+            filesize: element.filesize
+          });
+        });
+      }
+    }
+    response.body.files =  files;
+    server.send(JSON.stringify(response), tracker.sig.port, tracker.sig.host);
+  }
+}
+
+//SOPORTA LA REPETICIÓN ERRONEA DEL INGRESO DE LA INFORMACION DE UN PAR PARA UN ARCHIVO REPETIDO?
 function store(msg) {
   let obj = JSON.parse(msg);
   let hash = obj.body.id; //se supone que ya viene el hash en el mensaje
@@ -120,32 +189,16 @@ function store(msg) {
   }
 }
 
-function sendStore(filename, filesize, peerIP, peerPort) {
-  msg = {
-    route: "/file/{hash}/store(TEST)",
-    //originIP: str,???
-    //originPort: int,???
-    body: {
-      id: sha1(filename + filesize),
-      filename: filename,
-      filesize: filesize,
-      parIP: peerIP,
-      parPort: peerPort
-    }
-  }
-  server.send(JSON.stringify(msg), tracker.sig.port, tracker.sig.host);
-}
-
 //test sha1
 //console.log(sha1('ArchivoPrueba.txt'));
 //console.log(sha1('1').slice(0,2));
 //console.log(parseInt(sha1('ArchivoPrueba.txt').slice(0,2),16));
 
 crearTracker();
-storeLocal('ArchivoPrueba.txt', 3, { host: 'hostprueba', port: 3001 });
-//storeLocal('ArchivoPrueba.txt',3,{ host: 'hostpruebados', port: 3002 });
+//storeLocal('ArchivoPrueba.txt', 3, { host: 'hostprueba', port: 3001 });
+//storeLocal('ArchivoPrueba.txt', 3, { host: 'hostpruebados', port: 3002 });
 //store('ArchivoPrueba.txt',3,[{ host: 'hostpruebados', port: 3002 }, { host: 'hostpruebatres', port: 3003 }]);
 //preguntar si es posible dar de alta dos pares para un archivo al mismo tiempo => por ahora suponemos que no
 //console.log(Object.fromEntries((tracker.diccionario[67]).entries()));
-console.log(Object.fromEntries((tracker.diccionario[156]).entries()));
+//console.log(Object.fromEntries((tracker.diccionario[156]).entries()));
 //console.log(tracker.min_range + ' ' + tracker.max_range);
