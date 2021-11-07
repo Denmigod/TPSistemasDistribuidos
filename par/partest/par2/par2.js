@@ -1,11 +1,13 @@
 const net = require('net');
 const fs = require('fs');
+const { RSA_X931_PADDING } = require('constants');
 
 var server;
 
 function createPeer() {
     let config = require("./inicialConfig.json");
     tracker = {
+        //diccionario: [],
         id: config.id,
         host: config.host,
         port: config.port,
@@ -37,6 +39,9 @@ function createPeerServer(config) {
         console.log(`Peer ${config.id} is listening requests bound to port ${config.port}.`);
     });
 }
+
+createPeer();
+requestTorrentDownload();
 
 function loadJSON(file) {
     let data = fs.readFileSync(file);
@@ -88,5 +93,30 @@ function downloadFile(torrent) {
     });
 }
 
-createPeer();
-//requestTorrentDownload();
+/*
+const client = net.connect({ port: 3000, address: 'localhost' }, () => {
+    // 'connect' listener
+    console.log('connected to server!');
+});
+const chunks = [];
+client.on('data', chunk => {
+    chunks.push(chunk);
+    //console.log(chunks.length);
+    //console.log(chunk);
+    client.end();
+});
+client.on('end', () => {
+    const file = Buffer.concat(chunks);
+
+    fs.writeFile('message.jpg', file, (err) => {
+        if (err) throw err;
+        console.log('The file has been saved!');
+    });
+    console.log('disconnected from server');
+});
+*/
+//REQUESTING A FILE AND GETTING IT BY CHUNKS
+
+//https://nodejs.org/api/fs.html#fs_fs_writefile_file_data_options_callback
+//https://stackoverflow.com/questions/2496710/writing-files-in-node-js
+//https://stackoverflow.com/questions/36397950/how-to-send-file-over-tcp-in-one-time-in-nodejs

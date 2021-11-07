@@ -1,0 +1,16 @@
+{
+   "cantNodos":3,
+   "direcciones":{
+       "ant": {
+        "host":"localhost",
+        "port":"8080"
+       },
+       "sig": {
+        "host":"localhost",
+        "port":"8082"
+       }
+   },
+   "id":"2",
+   "host":"localhost",
+   "port":"8081"
+}

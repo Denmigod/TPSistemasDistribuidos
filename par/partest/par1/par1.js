@@ -6,6 +6,7 @@ var server;
 function createPeer() {
     let config = require("./inicialConfig.json");
     tracker = {
+        //diccionario: [],
         id: config.id,
         host: config.host,
         port: config.port,
@@ -37,6 +38,9 @@ function createPeerServer(config) {
         console.log(`Peer ${config.id} is listening requests bound to port ${config.port}.`);
     });
 }
+
+createPeer();
+requestTorrentDownload();
 
 function loadJSON(file) {
     let data = fs.readFileSync(file);
@@ -89,4 +93,3 @@ function downloadFile(torrent) {
 }
 
 createPeer();
-//requestTorrentDownload();

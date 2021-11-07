@@ -62,7 +62,7 @@ function createTrackerServer(config) {
   });
 
   server.on('listening', function () {
-    console.log(`Tracker ${config.id} is listening requests.`);
+    console.log("Tracker " + config.id + " is listening requests.");
   });
 
   server.bind(config.port);
@@ -75,7 +75,7 @@ function createTrackerServer(config) {
 function setStaticRange(config) {
   let cantNodos = config.cantNodos;
   let partitionSize = Math.floor(256 / cantNodos);
-  let partition_begin = partitionSize * (config.id - 1);
+  let partition_begin = partitionSize * (config.id - 1);  //los id de nodos tracker arrancan por el 1
   let partition_end = partitionSize + partition_begin;
   if (cantNodos == config.id)
     partition_end += 256 % cantNodos - 1;
@@ -123,7 +123,10 @@ function scan(msg) {
   let obj = JSON.parse(msg);
   let response = { ...obj };
   if(response.messageId == `scanId=${tracker.id}`) {  //ya se completo el recorrido de todos los trackers
+    //ES EL PRIMER TRACKER Y DEBERIA RESPONDER AL SERVER, PERO FALTA HACER ESA CONEXIÓN
     server.send(JSON.stringify(response), response.originPort, response.originIP);
+    console.log(response);
+    console.log(response.body);
   }
   else {
     if(response.messageId.length<=7){ //es el primer tracker que se marcara para recorrer todos los nodos scaneando
@@ -132,7 +135,7 @@ function scan(msg) {
     let files = obj.body.files;
     for (let index=tracker.min_range; index<=tracker.max_range; index++){ //añado todos los archivos guardados en este dominio
       let arrayoffiles = tracker.diccionario[index];
-      if(!(arrayoffiles === 'undefined')) {  //chequeo que el dominio este inicializado (buscar si hay una mejor forma de chequearlo)
+      if(!(typeof arrayoffiles === 'undefined')) {
         arrayoffiles.forEach(element => {
           files.push({
             id: element.hash,
@@ -147,7 +150,6 @@ function scan(msg) {
   }
 }
 
-//SOPORTA LA REPETICIÓN ERRONEA DEL INGRESO DE LA INFORMACION DE UN PAR PARA UN ARCHIVO REPETIDO?
 function store(msg) {
   let obj = JSON.parse(msg);
   let hash = obj.body.id; //se supone que ya viene el hash en el mensaje
@@ -167,7 +169,7 @@ function store(msg) {
     }
     else {
       let arrayoffiles = tracker.diccionario[index];
-      let indexedfile = arrayoffiles.filter(function (fileinfo) { //filtra si existe un archivo con el mismo hash
+      let indexedfile = arrayoffiles.filter(function (fileinfo) {
         return fileinfo.hash == hash;
       });
       if(indexedfile.length>0){  //ya existe un archivo con el hash correspondiente
@@ -181,6 +183,12 @@ function store(msg) {
           }
         );
       }
+
+      //REVISAR
+      //https://code.tutsplus.com/es/tutorials/how-to-use-map-filter-reduce-in-javascript--cms-26209
+
+
+      //tracker.diccionario[index] = new Map(Object.entries({mapobject}));
     }
     //BORRAR
     //console.log(Object.fromEntries((tracker.diccionario[254]).entries()));
@@ -197,6 +205,7 @@ function count(msg) {
   let response = { ...obj };
   if(response.messageId == `countId=${tracker.id}`) {  //ya se completo el recorrido de todos los trackers
     server.send(JSON.stringify(response), response.originPort, response.originIP);
+    console.log(response);  //BORRAR
   }
   else {
     if(response.messageId.length<=8){ //es el primer tracker que se marcara para recorrer todos los nodos scaneando
@@ -219,10 +228,125 @@ function count(msg) {
 //console.log(parseInt(sha1('ArchivoPrueba.txt').slice(0,2),16));
 
 crearTracker();
-//storeLocal('ArchivoPrueba.txt', 3, { host: 'hostprueba', port: 3001 });
-//storeLocal('ArchivoPrueba.txt', 3, { host: 'hostpruebados', port: 3002 });
+//storeLocal('ArchivoPrueba.txt',3,{ host: 'hostprueba', port: 3001 });
+//storeLocal('ArchivoPrueba.txt',3,{ host: 'hostpruebados', port: 3002 });
 //store('ArchivoPrueba.txt',3,[{ host: 'hostpruebados', port: 3002 }, { host: 'hostpruebatres', port: 3003 }]);
 //preguntar si es posible dar de alta dos pares para un archivo al mismo tiempo => por ahora suponemos que no
 //console.log(Object.fromEntries((tracker.diccionario[67]).entries()));
 //console.log(Object.fromEntries((tracker.diccionario[156]).entries()));
 //console.log(tracker.min_range + ' ' + tracker.max_range);
+
+//sendStore('ArchivoPrueba.txt',3,'hostprueba',3001);
+
+store(JSON.stringify(
+  {
+    route: "/file/fe9635d7a6ae44389f6480e13fee5b0127ed86be/store",
+    //originIP: str,???
+    //originPort: int,???
+    body: {
+        id: 'fe9635d7a6ae44389f6480e13fee5b0127ed86be',
+        filename: 'ArchivoPrueba(es otro hash).txt',
+        filesize: 4,
+        parIP: 'localhost',
+        parPort: 4000
+    }
+  }
+));
+
+store(JSON.stringify(
+  {
+    route: "/file/fe9635d7a6ae44389f6480e13fee5b0127ed86be/store",
+    //originIP: str,???
+    //originPort: int,???
+    body: {
+        id: 'fe9635d7a6ae44389f6480e13fee5b0127ed86be',
+        filename: 'ArchivoPrueba(es otro hash).txt',
+        filesize: 4,
+        parIP: 'localhost',
+        parPort: 4001
+    }
+  }
+));
+
+store(JSON.stringify(
+  {
+    route: "/file/fe111117a6ae44389f6480e13fee5b0127ed86be/store",
+    //originIP: str,???
+    //originPort: int,???
+    body: {
+        id: 'fe111117a6ae44389f6480e13fee5b0127ed86be',
+        filename: 'ArchivoPrueba2(es otro hash).txt',
+        filesize: 4,
+        parIP: 'localhost',
+        parPort: 4012
+    }
+  }
+));
+
+store(JSON.stringify(
+  {
+    route: "/file/8a222227a6ae44389f6480e13fee5b0127ed86be/store",
+    //originIP: str,???
+    //originPort: int,???
+    body: {
+        id: '8a222227a6ae44389f6480e13fee5b0127ed86be',
+        filename: 'ArchivoPrueba2(es otro hash).txt',
+        filesize: 5,
+        parIP: 'localhost',
+        parPort: 4013
+    }
+  }
+));
+
+store(JSON.stringify(
+  {
+    route: "/file/00333337a6ae44389f6480e13fee5b0127ed86be/store",
+    //originIP: str,???
+    //originPort: int,???
+    body: {
+        id: '00333337a6ae44389f6480e13fee5b0127ed86be',
+        filename: 'ArchivoPrueba2(es otro hash).txt',
+        filesize: 6,
+        parIP: 'localhost',
+        parPort: 4014
+    }
+  }
+));
+
+//SEARCH FUNCIONA CORRECTAMENTE
+/*
+search(JSON.stringify(
+  {
+      messageId: 'search00001',
+      route: '/file/fe9635d7a6ae44389f6480e13fee5b0127ed86be',
+      originIP: 'localhost',
+      originPort: 5000,
+      body: {}
+  }
+));
+*/
+
+scan(JSON.stringify(
+  {
+    messageId: 'scanId=',
+    route: '/scan',
+    originIP: 'localhost',
+    originPort: 5000,
+    body: {
+      files: []
+    }
+  }
+));
+
+count(JSON.stringify(
+  {
+    messageId: 'countId=',
+    route: '/count',
+    originIP: 'localhost',
+    originPort: 5000,
+    body: {
+        trackerCount: 0,
+        fileCount: 0
+    }
+  }
+));
