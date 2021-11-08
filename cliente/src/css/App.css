@@ -46,3 +46,13 @@ footer{
 .footerText{
   margin-top: 1%;
 }
+
+.form-input{
+  margin-left: 2%;
+}
+.error{
+  background-color: #BF1363;
+  color: #DEEEEA;
+  text-align: center;
+  font-family: 'Rubik', sans-serif;
+}

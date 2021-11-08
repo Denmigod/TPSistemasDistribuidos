@@ -1,8 +1,11 @@
 const express = require("express");
 const config = require("./inicialServerConfig.json");
-const sha1 = require('js-sha1');
-const udp = require('dgram');
+const sha1 = require("js-sha1");
+const udp = require("dgram");
 var server;
+var listadoArchivos = [];
+var contadorMSG = 1;
+var msgArrays = [];
 
 const app = express();
 const port = config.port;
@@ -15,56 +18,111 @@ app.use(
   })
 );
 
-
 function createTrackerServer(config) {
-  server = udp.createSocket('udp4');
+  server = udp.createSocket("udp4");
 
-  server.on('message', function (msg, info) {
+  server.on("message", function (msg, info) {
     const remoteAddress = info.address;
     const remotePort = info.port;
-    if (obj.route.indexOf('scan') != -1){
-      //scan(msg);
+    let obj = JSON.parse(msg);
+    if (obj.route.indexOf("scan") != -1) {
+      listadoArchivos = obj.body.files;
     }
-    server.send('Stored succesfull in node ' + config.id, remotePort, remoteAddress);
+
+    if (obj.route.indexOf("search") != -1) {
+      //obtener el indice parseando el messageId
+      let indice = obj.messageId.slice(5);
+      msgArrays[indice] = {
+        hash: obj.body.id,
+        trackerIP: obj.body.trackerIP,
+        trackerPort: obj.body.trackerPort,
+      };
+    }
+    // server.send(
+    //   "Stored succesfull in node " + config.id,
+    //   remotePort,
+    //   remoteAddress
+    // );
   });
 
-  server.on('listening', function () {
-    console.log("Tracker " + config.id + " is listening requests.");
+  server.on("listening", function () {
+    console.log("Server " + config.id + " is listening requests.");
   });
 
   server.bind(config.port);
 }
 
 app.get("/file/", (req, res) => {
-  
-  const callTracker= async ()=>{
+  const msg = JSON.stringify({
+    messageId: "scanId=",
+    route: "/scan",
+    originIP: config.host,
+    originPort: config.port,
+    body: {
+      files: [],
+    },
+  });
 
-    const msg= JSON.stringify({
-      messageId: "scanId=",
-      route: "/scan",
-      originIP: config.host,
-      originPort: config.port,
-      body: {
-        files: [],
-      },
-    })
-    
-    await    server.send(msg,config.direccionTracker.port,config.direccionTracker.host);
-    res.send( );
-  }
-  callTracker();
+  server.send(msg, config.direccionTracker.port, config.direccionTracker.host);
+
+  setTimeout(() => {
+    console.log("esperando datos");
+  }, 5000);
+
+  res.send(listadoArchivos);
+  listadoArchivos = [];
 });
 
 app.get(`/file/:hash`, (req, res) => {
   const hash = req.params.hash;
+  const indice = contadorMSG++;
+  const msg = JSON.stringify({
+    messageId: `search${indice}`,
+    route: `/file/${hash}`,
+    originIP: config.host,
+    originPort: config.port,
+    body: {},
+  });
 
-  res.send([{ id: "15", filename: "CSGO", filesize: 500 }]);
+  server.send(msg, config.direccionTracker.port, config.direccionTracker.host);
+
+  setTimeout(() => {
+    console.log("esperando datos");
+  }, 5000);
+
+  let respuesta = msgArrays[indice];
+
+  if (!respuesta) respuesta = [];
+
+  res.send(JSON.stringify(respuesta));
 });
 
 app.post("/file", (req, res) => {
   console.log("receiving data ...");
   console.log("body is ", req.body);
-  res.send(req.body);
+
+//   body: {
+//     filename: str,
+//     filesize: int,
+//     nodeIP: str,
+//     nodePort: int
+// }
+let hash= sha1(req.body.filename+req.body.filesize);
+const msg=JSON.stringify(
+  {
+    route: `/file/${hash}/store`,
+    body: {
+        id: hash,
+        filename: req.body.filename,
+        filesize: req.body.filesize,
+        parIP: req.body.nodeIP,
+        parPort: req.body.nodePort
+    }
+  }
+);
+
+server.send(msg, config.direccionTracker.port, config.direccionTracker.host);
+  res.send("Lo envio correctamente");
 });
 
 app.listen(port, () => {

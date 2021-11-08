@@ -5,7 +5,7 @@ const ListadoArchivos = ({ listado }) => {
     <Fragment>
       {listado?.map((element) => (
         <div className="row">
-          <div className="three columns nom-arch">{element.nombre}</div>
+          <div className="three columns nom-arch">{element.filename}</div>
           
             <button className="button-primary">Descargar Torrent</button>
           
