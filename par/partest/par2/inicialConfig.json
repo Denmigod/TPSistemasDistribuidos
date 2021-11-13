@@ -1,5 +1,8 @@
 {
    "id":"2",
    "host":"localhost",
-   "port":"3001"
+   "port":"3001",
+   "clientPort":"7002",
+   "trackerHost":"localhost",
+   "trackerPort":"8080"
 }

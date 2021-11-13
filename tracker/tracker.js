@@ -106,7 +106,7 @@ function found(msg, hash, peers){
   let obj = JSON.parse(msg);
   let response = {
     messageId: obj.messageId,
-    route: `/file/${hash}`,
+    route: `/file/${hash}/found`,
     originIP: obj.originIP,
     originPort: obj.originPort,
     body: {
@@ -116,7 +116,7 @@ function found(msg, hash, peers){
         pares: peers
     }
   }
-  server.send(response, obj.originIP, obj.originPort); //Envia lo encontrado al servidor
+  server.send(JSON.stringify(response), obj.originPort, obj.originIP); //Envia lo encontrado al servidor
 }
 
 function scan(msg) {

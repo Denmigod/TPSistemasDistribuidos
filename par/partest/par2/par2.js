@@ -1,17 +1,18 @@
 const net = require('net');
 const fs = require('fs');
-const { RSA_X931_PADDING } = require('constants');
+const sha1 = require('js-sha1');
 
+var par;
 var server;
 
 function createPeer() {
     let config = require("./inicialConfig.json");
-    tracker = {
-        //diccionario: [],
+    par = {
         id: config.id,
         host: config.host,
         port: config.port,
-        server: server
+        server: server,
+        files: new Map()
     };
     createPeerServer(config);
 }
@@ -20,16 +21,19 @@ function createPeerServer(config) {
     server = net.createServer(incomingConnection);
     function incomingConnection(socket) {
         socket.on('data', function (data) {
-            let torrentName = data.toString();
-            fs.readFile(torrentName, (err, data) => {
-                if (!err) {
-                    //console.log(data.length);
-                    socket.write(data);
-                }
-                else {
-                    console.log(`readfile ${torrentName} err.`);
-                }
-            });
+            let torrentHash = data.toString();
+            let file = par.files.get(torrentHash);
+            if(file) {
+                fs.readFile(file.filename, (err, data) => {
+                    if (!err) {
+                        //console.log(data.length);
+                        socket.write(data);
+                    }
+                    else {
+                        console.log(`readfile ${file.filename} err.`);
+                    }
+                });
+            }
         });
     }
     server.on('error', (err) => {
@@ -39,9 +43,6 @@ function createPeerServer(config) {
         console.log(`Peer ${config.id} is listening requests bound to port ${config.port}.`);
     });
 }
-
-createPeer();
-requestTorrentDownload();
 
 function loadJSON(file) {
     let data = fs.readFileSync(file);
@@ -68,12 +69,16 @@ function requestTorrentDownload() {
     });
 }
 
+function requestTorrentInformation(){
+
+}
+
 function downloadFile(torrent) {
     const client = net.connect({ port: torrent.port, address: torrent.host }, () => {
         // 'connect' listener
         console.log('connected to server!');
-        console.log(torrent.name);
-        client.write(torrent.name);
+        console.log(torrent.hash);
+        client.write(torrent.hash);
     });
     const chunks = [];
     client.on('data', chunk => {
@@ -92,6 +97,20 @@ function downloadFile(torrent) {
         console.log('disconnected from server');
     });
 }
+
+function addFile(filename, filesize){
+    let hash = sha1(filename + filesize);
+    let file = {
+        filename: filename,
+        filesize: filesize
+    }
+    par.files.set(hash, file);
+    console.log(hash);
+}
+
+createPeer();
+//requestTorrentDownload();
+requestTorrentDownload();
 
 /*
 const client = net.connect({ port: 3000, address: 'localhost' }, () => {
