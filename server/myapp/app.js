@@ -11,7 +11,8 @@ const app = express();
 const port = config.port;
 
 const cors = require("cors");
-
+// middleware
+app.use(express.json());
 app.use(
   cors({
     origin: "*",
@@ -67,10 +68,10 @@ app.get("/file/", (req, res) => {
 
   setTimeout(() => {
     console.log("esperando datos");
+    res.send(listadoArchivos);
+    listadoArchivos = [];
   }, 5000);
 
-  res.send(listadoArchivos);
-  listadoArchivos = [];
 });
 
 app.get(`/file/:hash`, (req, res) => {
@@ -83,23 +84,23 @@ app.get(`/file/:hash`, (req, res) => {
     originPort: config.port,
     body: {},
   });
-
+   console.log(msg);
   server.send(msg, config.direccionTracker.port, config.direccionTracker.host);
 
   setTimeout(() => {
-    console.log("esperando datos");
+    console.log("esperando datos para descargar torrent");
+    let respuesta = msgArrays[indice];
+  console.log(respuesta);
+    if (!respuesta) respuesta = [];
+  
+    res.send(JSON.stringify(respuesta));
   }, 5000);
 
-  let respuesta = msgArrays[indice];
-
-  if (!respuesta) respuesta = [];
-
-  res.send(JSON.stringify(respuesta));
 });
 
 app.post("/file", (req, res) => {
   console.log("receiving data ...");
-  console.log("body is ", req.body);
+  console.log(req.body);
 
   //   body: {
   //     filename: str,

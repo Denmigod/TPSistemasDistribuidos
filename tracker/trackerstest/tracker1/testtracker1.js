@@ -238,116 +238,116 @@ crearTracker();
 
 //sendStore('ArchivoPrueba.txt',3,'hostprueba',3001);
 
-store(JSON.stringify(
-  {
-    route: "/file/fe9635d7a6ae44389f6480e13fee5b0127ed86be/store",
-    //originIP: str,???
-    //originPort: int,???
-    body: {
-        id: 'fe9635d7a6ae44389f6480e13fee5b0127ed86be',
-        filename: 'ArchivoPrueba(es otro hash).txt',
-        filesize: 4,
-        parIP: 'localhost',
-        parPort: 4000
-    }
-  }
-));
+// store(JSON.stringify(
+//   {
+//     route: "/file/fe9635d7a6ae44389f6480e13fee5b0127ed86be/store",
+//     //originIP: str,???
+//     //originPort: int,???
+//     body: {
+//         id: 'fe9635d7a6ae44389f6480e13fee5b0127ed86be',
+//         filename: 'ArchivoPrueba(es otro hash).txt',
+//         filesize: 4,
+//         parIP: 'localhost',
+//         parPort: 4000
+//     }
+//   }
+// ));
 
-store(JSON.stringify(
-  {
-    route: "/file/fe9635d7a6ae44389f6480e13fee5b0127ed86be/store",
-    //originIP: str,???
-    //originPort: int,???
-    body: {
-        id: 'fe9635d7a6ae44389f6480e13fee5b0127ed86be',
-        filename: 'ArchivoPrueba(es otro hash).txt',
-        filesize: 4,
-        parIP: 'localhost',
-        parPort: 4001
-    }
-  }
-));
+// store(JSON.stringify(
+//   {
+//     route: "/file/fe9635d7a6ae44389f6480e13fee5b0127ed86be/store",
+//     //originIP: str,???
+//     //originPort: int,???
+//     body: {
+//         id: 'fe9635d7a6ae44389f6480e13fee5b0127ed86be',
+//         filename: 'ArchivoPrueba(es otro hash).txt',
+//         filesize: 4,
+//         parIP: 'localhost',
+//         parPort: 4001
+//     }
+//   }
+// ));
 
-store(JSON.stringify(
-  {
-    route: "/file/fe111117a6ae44389f6480e13fee5b0127ed86be/store",
-    //originIP: str,???
-    //originPort: int,???
-    body: {
-        id: 'fe111117a6ae44389f6480e13fee5b0127ed86be',
-        filename: 'ArchivoPrueba2(es otro hash).txt',
-        filesize: 4,
-        parIP: 'localhost',
-        parPort: 4012
-    }
-  }
-));
+// store(JSON.stringify(
+//   {
+//     route: "/file/fe111117a6ae44389f6480e13fee5b0127ed86be/store",
+//     //originIP: str,???
+//     //originPort: int,???
+//     body: {
+//         id: 'fe111117a6ae44389f6480e13fee5b0127ed86be',
+//         filename: 'ArchivoPrueba2(es otro hash).txt',
+//         filesize: 4,
+//         parIP: 'localhost',
+//         parPort: 4012
+//     }
+//   }
+// ));
 
-store(JSON.stringify(
-  {
-    route: "/file/8a222227a6ae44389f6480e13fee5b0127ed86be/store",
-    //originIP: str,???
-    //originPort: int,???
-    body: {
-        id: '8a222227a6ae44389f6480e13fee5b0127ed86be',
-        filename: 'ArchivoPrueba2(es otro hash).txt',
-        filesize: 5,
-        parIP: 'localhost',
-        parPort: 4013
-    }
-  }
-));
+// store(JSON.stringify(
+//   {
+//     route: "/file/8a222227a6ae44389f6480e13fee5b0127ed86be/store",
+//     //originIP: str,???
+//     //originPort: int,???
+//     body: {
+//         id: '8a222227a6ae44389f6480e13fee5b0127ed86be',
+//         filename: 'ArchivoPrueba2(es otro hash).txt',
+//         filesize: 5,
+//         parIP: 'localhost',
+//         parPort: 4013
+//     }
+//   }
+// ));
 
-store(JSON.stringify(
-  {
-    route: "/file/00333337a6ae44389f6480e13fee5b0127ed86be/store",
-    //originIP: str,???
-    //originPort: int,???
-    body: {
-        id: '00333337a6ae44389f6480e13fee5b0127ed86be',
-        filename: 'ArchivoPrueba2(es otro hash).txt',
-        filesize: 6,
-        parIP: 'localhost',
-        parPort: 4014
-    }
-  }
-));
+// store(JSON.stringify(
+//   {
+//     route: "/file/00333337a6ae44389f6480e13fee5b0127ed86be/store",
+//     //originIP: str,???
+//     //originPort: int,???
+//     body: {
+//         id: '00333337a6ae44389f6480e13fee5b0127ed86be',
+//         filename: 'ArchivoPrueba2(es otro hash).txt',
+//         filesize: 6,
+//         parIP: 'localhost',
+//         parPort: 4014
+//     }
+//   }
+// ));
 
-//SEARCH FUNCIONA CORRECTAMENTE
+// //SEARCH FUNCIONA CORRECTAMENTE
 
-search(JSON.stringify(
-  {
-      messageId: 'search00001',
-      route: '/file/fe9635d7a6ae44389f6480e13fee5b0127ed86be',
-      originIP: 'localhost',
-      originPort: 5000,
-      body: {}
-  }
-));
+// search(JSON.stringify(
+//   {
+//       messageId: 'search00001',
+//       route: '/file/fe9635d7a6ae44389f6480e13fee5b0127ed86be',
+//       originIP: 'localhost',
+//       originPort: 5000,
+//       body: {}
+//   }
+// ));
 
-/*
-scan(JSON.stringify(
-  {
-    messageId: 'scanId=',
-    route: '/scan',
-    originIP: 'localhost',
-    originPort: 5000,
-    body: {
-      files: []
-    }
-  }
-));
-*/
+// /*
+// scan(JSON.stringify(
+//   {
+//     messageId: 'scanId=',
+//     route: '/scan',
+//     originIP: 'localhost',
+//     originPort: 5000,
+//     body: {
+//       files: []
+//     }
+//   }
+// ));
+// */
 
-count(JSON.stringify(
-  {
-    messageId: 'countId=',
-    route: '/count',
-    originIP: 'localhost',
-    originPort: 5000,
-    body: {
-        trackerCount: 0,
-        fileCount: 0
-    }
-  }
-));
+// count(JSON.stringify(
+//   {
+//     messageId: 'countId=',
+//     route: '/count',
+//     originIP: 'localhost',
+//     originPort: 5000,
+//     body: {
+//         trackerCount: 0,
+//         fileCount: 0
+//     }
+//   }
+// ));

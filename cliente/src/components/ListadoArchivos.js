@@ -1,15 +1,12 @@
 import React, { Fragment } from "react";
+import Card from "./Card";
 
 const ListadoArchivos = ({ listado }) => {
+ 
   return (
     <Fragment>
       {listado?.map((element) => (
-        <div className="row">
-          <div className="three columns nom-arch">{element.filename}</div>
-          
-            <button className="button-primary">Descargar Torrent</button>
-          
-        </div>
+        <Card key={element.id} filename={element.filename} id={element.id} />
       ))}
     </Fragment>
   );
