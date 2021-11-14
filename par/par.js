@@ -28,18 +28,20 @@ function createPeerServer(config) {
     server = net.createServer(incomingConnection);
     function incomingConnection(socket) {
         socket.on('data', function (data) {
-            let torrentHash = data.toString();
-            let file = par.files.get(torrentHash);
-            if(file) {
-                fs.readFile(file.filename, (err, data) => {
-                    if (!err) {
-                        //console.log(data.length);
-                        socket.write(data);
-                    }
-                    else {
-                        console.log(`readfile ${file.filename} err.`);
-                    }
-                });
+            let obj = JSON.parse(data);
+            if (obj.type == 'GET FILE') {
+                //let torrentHash = data.toString();
+                let file = par.files.get(obj.hash);
+                if (file) {
+                    fs.readFile(file.filename, (err, data) => {
+                        if (!err) {
+                            socket.write(data);
+                        }
+                        else {
+                            console.log(`readfile ${file.filename} err.`);
+                        }
+                    });
+                }
             }
         });
     }
@@ -53,21 +55,21 @@ function createPeerServer(config) {
 
 function createPeerClient(config) {
     client = udp.createSocket('udp4');
-  
+
     client.on('message', function (msg, info) {
-      const remoteAddress = info.address;
-      const remotePort = info.port;
-      let obj = JSON.parse(msg);
-      if (obj.route.indexOf('found') != -1){
-        //count(msg);
-        console.log(obj);
-      }
+        const remoteAddress = info.address;
+        const remotePort = info.port;
+        let obj = JSON.parse(msg);
+        if (obj.route.indexOf('found') != -1) {
+            //count(msg);
+            console.log(obj);
+        }
     });
-  
+
     client.on('listening', function () {
-      console.log(`Peer ${config.id} is listening udp requests on port ${config.clientPort}.`);
+        console.log(`Peer ${config.id} is listening udp requests on port ${config.clientPort}.`);
     });
-  
+
     client.bind(config.clientPort);
 }
 
@@ -92,11 +94,11 @@ function requestTorrentDownload() {
     });
 }
 
-function requestTorrentInformation(filename, filesize){
+function requestTorrentInformation(filename, filesize) {
     let hash = sha1(filename + filesize);
     let msg = {
-        messageId: 'search00001',
-        route: '/file/fe9635d7a6ae44389f6480e13fee5b0127ed86be',
+        messageId: `searchPeer${config.id}`,
+        route: `/file/${hash}`,
         originIP: par.host,
         originPort: par.clientPort,
         body: {}
@@ -109,8 +111,11 @@ function downloadFile(torrent) {
     const client = net.connect({ port: torrent.port, address: torrent.host }, () => {
         // 'connect' listener
         console.log('connected to server!');
-        console.log(torrent.hash);
-        client.write(torrent.hash);
+        //console.log(torrent.hash);
+        client.write(JSON.stringify({
+            type: 'GET FILE',
+            hash: torrent.hash
+        }));
     });
     const chunks = [];
     client.on('data', chunk => {
@@ -130,7 +135,7 @@ function downloadFile(torrent) {
     });
 }
 
-function addFile(filename, filesize){
+function addFile(filename, filesize) {
     let hash = sha1(filename + filesize);
     let file = {
         filename: filename,
@@ -142,7 +147,7 @@ function addFile(filename, filesize){
 
 createPeer();
 //requestTorrentDownload();
-addFile('daemon0.jpg',213056);
+addFile('daemon0.jpg', 213056);
 //addFile('archivoprueba2.txt',2);
 //console.log(par.files);
 //console.log(par.files.get('15be7e8342476cb6661f16e7f5378b0bc0b20f20'));

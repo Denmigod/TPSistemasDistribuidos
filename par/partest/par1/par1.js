@@ -1,8 +1,10 @@
 const net = require('net');
+const udp = require('dgram');
 const fs = require('fs');
 const sha1 = require('js-sha1');
 
 var par;
+var client;
 var server;
 
 function createPeer() {
@@ -12,28 +14,34 @@ function createPeer() {
         host: config.host,
         port: config.port,
         server: server,
-        files: new Map()
+        files: new Map(),
+        client: client,
+        clientPort: config.clientPort,
+        trackerHost: config.trackerHost,
+        trackerPort: config.trackerPort
     };
     createPeerServer(config);
+    createPeerClient(config);
 }
 
 function createPeerServer(config) {
     server = net.createServer(incomingConnection);
     function incomingConnection(socket) {
         socket.on('data', function (data) {
-            let torrentHash = data.toString();
-            let file = par.files.get(torrentHash);
-            console.log(file.filename);
-            if(file) {
-                fs.readFile(file.filename, (err, data) => {
-                    if (!err) {
-                        //console.log(data.length);
-                        socket.write(data);
-                    }
-                    else {
-                        console.log(`readfile ${file.filename} err.`);
-                    }
-                });
+            let obj = JSON.parse(data);
+            if (obj.type == 'GET FILE') {
+                //let torrentHash = data.toString();
+                let file = par.files.get(obj.hash);
+                if (file) {
+                    fs.readFile(file.filename, (err, data) => {
+                        if (!err) {
+                            socket.write(data);
+                        }
+                        else {
+                            console.log(`readfile ${file.filename} err.`);
+                        }
+                    });
+                }
             }
         });
     }
@@ -45,41 +53,69 @@ function createPeerServer(config) {
     });
 }
 
+function createPeerClient(config) {
+    client = udp.createSocket('udp4');
+
+    client.on('message', function (msg, info) {
+        const remoteAddress = info.address;
+        const remotePort = info.port;
+        let obj = JSON.parse(msg);
+        if (obj.route.indexOf('found') != -1) {
+            //count(msg);
+            console.log(obj);
+        }
+    });
+
+    client.on('listening', function () {
+        console.log(`Peer ${config.id} is listening udp requests on port ${config.clientPort}.`);
+    });
+
+    client.bind(config.clientPort);
+}
+
 function loadJSON(file) {
     let data = fs.readFileSync(file);
     return JSON.parse(data);
 }
 
 function requestTorrentDownload() {
-    let file, torrent;
+    let torrent;
     const readline = require("readline");
     const rl = readline.createInterface({
         input: process.stdin,
         output: process.stdout
     });
     rl.question('Escriba el nombre del torrent que desea utilizar', function (name) {
-        //file = require(`./${name}`);
         torrent = loadJSON(`./${name}`);
         rl.close();
-        //console.log(torrent);
     });
     rl.on("close", function () {
-        //process.exit(0);
-        //console.log(torrent);
         downloadFile(torrent);
     });
 }
 
-function requestTorrentInformation(){
-
+function requestTorrentInformation(filename, filesize) {
+    let hash = sha1(filename + filesize);
+    let msg = {
+        messageId: `searchPeer${config.id}`,
+        route: `/file/${hash}`,
+        originIP: par.host,
+        originPort: par.clientPort,
+        body: {}
+    }
+    console.log(par.clientPort);
+    client.send(JSON.stringify(msg), par.trackerPort, par.trackerHost);
 }
 
 function downloadFile(torrent) {
     const client = net.connect({ port: torrent.port, address: torrent.host }, () => {
         // 'connect' listener
         console.log('connected to server!');
-        console.log(torrent.hash);
-        client.write(torrent.hash);
+        //console.log(torrent.hash);
+        client.write(JSON.stringify({
+            type: 'GET FILE',
+            hash: torrent.hash
+        }));
     });
     const chunks = [];
     client.on('data', chunk => {
@@ -99,14 +135,14 @@ function downloadFile(torrent) {
     });
 }
 
-function addFile(filename, filesize){
+function addFile(filename, filesize) {
     let hash = sha1(filename + filesize);
     let file = {
         filename: filename,
         filesize: filesize
     }
     par.files.set(hash, file);
-    console.log(hash);
+    //console.log(hash);
 }
 
 createPeer();
