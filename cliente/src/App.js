@@ -1,8 +1,8 @@
+import ParticleBackground from "./components/ParticleBackground";
 import "../src/css/normalize.css";
 import "../src/css/skeleton.css";
 import "../src/css/App.css";
 import { Fragment, useState, useEffect } from "react";
-import ParticleBackground from "./components/ParticleBackground";
 import Error from "./components/Error";
 import ListadoArchivos from "./components/ListadoArchivos";
 import Footer from "./components/Footer";

@@ -46,12 +46,13 @@ function createTrackerServer(config) {
   });
 
   server.on("listening", function () {
-    console.log("Server " + config.id + " is listening requests.");
+    console.log("Web Server is listening udp requests.");
   });
 
   server.bind(config.port);
 }
 
+createTrackerServer(config);
 app.get("/file/", (req, res) => {
   const msg = JSON.stringify({
     messageId: "scanId=",
@@ -62,7 +63,6 @@ app.get("/file/", (req, res) => {
       files: [],
     },
   });
-
   server.send(msg, config.direccionTracker.port, config.direccionTracker.host);
 
   setTimeout(() => {
@@ -101,27 +101,26 @@ app.post("/file", (req, res) => {
   console.log("receiving data ...");
   console.log("body is ", req.body);
 
-//   body: {
-//     filename: str,
-//     filesize: int,
-//     nodeIP: str,
-//     nodePort: int
-// }
-let hash= sha1(req.body.filename+req.body.filesize);
-const msg=JSON.stringify(
-  {
+  //   body: {
+  //     filename: str,
+  //     filesize: int,
+  //     nodeIP: str,
+  //     nodePort: int
+  // }
+  let hash = sha1(req.body.filename + req.body.filesize);
+  const msg = JSON.stringify({
     route: `/file/${hash}/store`,
     body: {
-        id: hash,
-        filename: req.body.filename,
-        filesize: req.body.filesize,
-        parIP: req.body.nodeIP,
-        parPort: req.body.nodePort
-    }
-  }
-);
+      id: hash,
+      filename: req.body.filename,
+      filesize: req.body.filesize,
+      parIP: req.body.nodeIP,
+      parPort: req.body.nodePort,
+    },
+  });
 
-server.send(msg, config.direccionTracker.port, config.direccionTracker.host);
+  server.send(msg, config.direccionTracker.port, config.direccionTracker.host);
+  res.status(200);
   res.send("Lo envio correctamente");
 });
 
