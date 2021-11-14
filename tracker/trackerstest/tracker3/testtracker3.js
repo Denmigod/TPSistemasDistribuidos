@@ -62,7 +62,7 @@ function createTrackerServer(config) {
   });
 
   server.on('listening', function () {
-    console.log(`Tracker ${config.id} is listening requests.`);
+    console.log("Tracker " + config.id + " is listening requests.");
   });
 
   server.bind(config.port);
@@ -117,6 +117,8 @@ function found(msg, hash, peers){
     }
   }
   server.send(JSON.stringify(response), obj.originPort, obj.originIP); //Envia lo encontrado al servidor
+  //console.log(response);
+  //console.log(response.body);
 }
 
 function scan(msg) {
@@ -132,7 +134,7 @@ function scan(msg) {
     let files = obj.body.files;
     for (let index=tracker.min_range; index<=tracker.max_range; index++){ //añado todos los archivos guardados en este dominio
       let arrayoffiles = tracker.diccionario[index];
-      if(!(arrayoffiles === 'undefined')) {  //chequeo que el dominio este inicializado (buscar si hay una mejor forma de chequearlo)
+      if(!(typeof arrayoffiles === 'undefined')) {
         arrayoffiles.forEach(element => {
           files.push({
             id: element.hash,
@@ -147,7 +149,6 @@ function scan(msg) {
   }
 }
 
-//SOPORTA LA REPETICIÓN ERRONEA DEL INGRESO DE LA INFORMACION DE UN PAR PARA UN ARCHIVO REPETIDO?
 function store(msg) {
   let obj = JSON.parse(msg);
   let hash = obj.body.id; //se supone que ya viene el hash en el mensaje
@@ -167,7 +168,7 @@ function store(msg) {
     }
     else {
       let arrayoffiles = tracker.diccionario[index];
-      let indexedfile = arrayoffiles.filter(function (fileinfo) { //filtra si existe un archivo con el mismo hash
+      let indexedfile = arrayoffiles.filter(function (fileinfo) {
         return fileinfo.hash == hash;
       });
       if(indexedfile.length>0){  //ya existe un archivo con el hash correspondiente
@@ -181,6 +182,12 @@ function store(msg) {
           }
         );
       }
+
+      //REVISAR
+      //https://code.tutsplus.com/es/tutorials/how-to-use-map-filter-reduce-in-javascript--cms-26209
+
+
+      //tracker.diccionario[index] = new Map(Object.entries({mapobject}));
     }
     //BORRAR
     //console.log(Object.fromEntries((tracker.diccionario[254]).entries()));
@@ -219,10 +226,4 @@ function count(msg) {
 //console.log(parseInt(sha1('ArchivoPrueba.txt').slice(0,2),16));
 
 crearTracker();
-//storeLocal('ArchivoPrueba.txt', 3, { host: 'hostprueba', port: 3001 });
-//storeLocal('ArchivoPrueba.txt', 3, { host: 'hostpruebados', port: 3002 });
-//store('ArchivoPrueba.txt',3,[{ host: 'hostpruebados', port: 3002 }, { host: 'hostpruebatres', port: 3003 }]);
-//preguntar si es posible dar de alta dos pares para un archivo al mismo tiempo => por ahora suponemos que no
-//console.log(Object.fromEntries((tracker.diccionario[67]).entries()));
 //console.log(Object.fromEntries((tracker.diccionario[156]).entries()));
-//console.log(tracker.min_range + ' ' + tracker.max_range);
