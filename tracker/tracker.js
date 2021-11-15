@@ -46,19 +46,33 @@ function createTrackerServer(config) {
       //server.send('Stored succesfull in node ' + config.id, remotePort, remoteAddress);
     }*/
     let obj = JSON.parse(msg);
-    if (obj.route.indexOf('store') != -1){
+    if (obj.route.indexOf('addPar') != -1) {
+      let peerStoreMessage = JSON.stringify(
+        {
+          route: `/file/${obj.id}/store`,
+          body: {
+            id: obj.id,
+            filename: obj.filename,
+            filesize: obj.filesize,
+            parIP: obj.parIP,
+            parPort: obj.parPort
+          }
+        });
+      store(peerStoreMessage);
+    }
+    if (obj.route.indexOf('store') != -1) {
       store(msg);
     }
-    if (obj.route.indexOf('scan') != -1){
+    if (obj.route.indexOf('scan') != -1) {
       scan(msg);
     }
-    if (obj.route.indexOf('count') != -1){
+    if (obj.route.indexOf('count') != -1) {
       count(msg);
     }
-    if (obj.route.indexOf('join') != -1){
+    if (obj.route.indexOf('join') != -1) {
       joinEvaluation(msg);
     }
-    if (obj.route.length == 46){ //longitud exacta de cualquier ruta del tipo file/{hash}
+    if (obj.route.length == 46) { //longitud exacta de cualquier ruta del tipo file/{hash}
       search(msg);
     }
     //server.send('Stored succesfull in node ' + config.id, remotePort, remoteAddress);
@@ -83,7 +97,7 @@ function setStaticRange(config) {
   if (cantNodos == config.id)
     partition_end += 256 % cantNodos - 1;
   if (config.id != 1)
-    partition_begin += 1; 
+    partition_begin += 1;
   let range = {
     partition_begin: partition_begin,
     partition_end: partition_end
@@ -107,7 +121,7 @@ function search(msg) {
   }
 }
 
-function found(msg, hash, peers){
+function found(msg, hash, peers) {
   let obj = JSON.parse(msg);
   let response = {
     messageId: obj.messageId,
@@ -115,10 +129,10 @@ function found(msg, hash, peers){
     originIP: obj.originIP,
     originPort: obj.originPort,
     body: {
-        id: hash,
-        trackerIP: tracker.host,
-        trackerPort: tracker.port,
-        pares: peers
+      id: hash,
+      trackerIP: tracker.host,
+      trackerPort: tracker.port,
+      pares: peers
     }
   }
   server.send(JSON.stringify(response), obj.originPort, obj.originIP); //Envia lo encontrado al servidor
@@ -127,17 +141,17 @@ function found(msg, hash, peers){
 function scan(msg) {
   let obj = JSON.parse(msg);
   let response = { ...obj };
-  if(response.messageId == `scanId=${tracker.id}`) {  //ya se completo el recorrido de todos los trackers
+  if (response.messageId == `scanId=${tracker.id}`) {  //ya se completo el recorrido de todos los trackers
     server.send(JSON.stringify(response), response.originPort, response.originIP);
   }
   else {
-    if(response.messageId.length<=7){ //es el primer tracker que se marcara para recorrer todos los nodos scaneando
+    if (response.messageId.length <= 7) { //es el primer tracker que se marcara para recorrer todos los nodos scaneando
       response.messageId = `scanId=${tracker.id}`;
     }
     let files = obj.body.files;
-    for (let index=tracker.min_range; index<=tracker.max_range; index++){ //añado todos los archivos guardados en este dominio
+    for (let index = tracker.min_range; index <= tracker.max_range; index++) { //añado todos los archivos guardados en este dominio
       let arrayoffiles = tracker.diccionario[index];
-      if(!(arrayoffiles === 'undefined')) {  //chequeo que el dominio este inicializado (buscar si hay una mejor forma de chequearlo)
+      if (!(arrayoffiles === 'undefined')) {  //chequeo que el dominio este inicializado (buscar si hay una mejor forma de chequearlo)
         arrayoffiles.forEach(element => {
           files.push({
             id: element.hash,
@@ -147,7 +161,7 @@ function scan(msg) {
         });
       }
     }
-    response.body.files =  files;
+    response.body.files = files;
     server.send(JSON.stringify(response), tracker.sig.port, tracker.sig.host);
   }
 }
@@ -162,20 +176,20 @@ function store(msg) {
     let filesize = obj.body.filesize;
     let peer = { host: obj.body.parIP, port: obj.body.parPort };
     if (tracker.diccionario[index] == null) { //el dominio con ese indice se encuentra sin utilizar
-        tracker.diccionario[index] = [{
-          hash: hash,
-          filename: filename,
-          filesize: filesize,
-          peers: [peer] //objeto que contiene los pares que tienen el archivo
-          }
-        ]  //VECTOR
+      tracker.diccionario[index] = [{
+        hash: hash,
+        filename: filename,
+        filesize: filesize,
+        peers: [peer] //objeto que contiene los pares que tienen el archivo
+      }
+      ]  //VECTOR
     }
     else {
       let arrayoffiles = tracker.diccionario[index];
       let indexedfile = arrayoffiles.filter(function (fileinfo) { //filtra si existe un archivo con el mismo hash
         return fileinfo.hash == hash;
       });
-      if(indexedfile.length>0){  //ya existe un archivo con el hash correspondiente
+      if (indexedfile.length > 0) {  //ya existe un archivo con el hash correspondiente
         indexedfile[0].peers.push(peer);
       } else {  //no existe un archivo con el hash correspondiente
         arrayoffiles.push({
@@ -183,7 +197,7 @@ function store(msg) {
           filename: filename,
           filesize: filesize,
           peers: [peer] //objeto que contiene los pares que tienen el archivo
-          }
+        }
         );
       }
     }
@@ -200,17 +214,17 @@ function store(msg) {
 function count(msg) {
   let obj = JSON.parse(msg);
   let response = { ...obj };
-  if(response.messageId == `countId=${tracker.id}`) {  //ya se completo el recorrido de todos los trackers
+  if (response.messageId == `countId=${tracker.id}`) {  //ya se completo el recorrido de todos los trackers
     server.send(JSON.stringify(response), response.originPort, response.originIP);
   }
   else {
-    if(response.messageId.length<=8){ //es el primer tracker que se marcara para recorrer todos los nodos scaneando
+    if (response.messageId.length <= 8) { //es el primer tracker que se marcara para recorrer todos los nodos scaneando
       response.messageId = `countId=${tracker.id}`;
     }
     obj.body.trackerCount += 1;
-    for (let index=tracker.min_range; index<=tracker.max_range; index++){ //añado todos los archivos guardados en este dominio
+    for (let index = tracker.min_range; index <= tracker.max_range; index++) { //añado todos los archivos guardados en este dominio
       let arrayoffiles = tracker.diccionario[index];
-      if(!(typeof arrayoffiles === 'undefined')) {  //chequeo que el dominio este inicializado (buscar si hay una mejor forma de chequearlo)
+      if (!(typeof arrayoffiles === 'undefined')) {  //chequeo que el dominio este inicializado (buscar si hay una mejor forma de chequearlo)
         arrayoffiles.forEach(element => { obj.body.fileCount += 1; });
       }
     }
@@ -232,35 +246,35 @@ function join(host, port) {
 function joinEvaluation(msg) {
   let obj = JSON.parse(msg);
   let response = { ...obj };
-  if(response.messageId.indexOf(`StartingId=${tracker.id}`) != -1) {  //ya se completo el recorrido de todos los trackers
+  if (response.messageId.indexOf(`StartingId=${tracker.id}`) != -1) {  //ya se completo el recorrido de todos los trackers
     server.send(JSON.stringify(response), response.originPort, response.originIP);
     //console.log(response);
   }
   else {
-    if(response.messageId.length<=10){ //es el primer tracker que se marcara para recorrer todos los nodos scaneando
+    if (response.messageId.length <= 10) { //es el primer tracker que se marcara para recorrer todos los nodos scaneando
       response.messageId += `StartingId=${tracker.id}`;
     }
     let available;
     let availableRange = response.availableSpaces.pop();
-    if(availableRange && availableRange.partition_end==tracker.min_range-1) {  //hay un rango que podría continuar
+    if (availableRange && availableRange.partition_end == tracker.min_range - 1) {  //hay un rango que podría continuar
       available = true;
       //console.log(availableRange);
     }
     else {  //sino comienzo a verificar por nuevos rangos en este nodo
-      if(availableRange)
-        response.availableSpaces.push({...availableRange});
+      if (availableRange)
+        response.availableSpaces.push({ ...availableRange });
       available = false;
       availableRange = {
         partition_begin: 0,
         partition_end: 0
       };
     }
-    for (let index=tracker.min_range; index<=tracker.max_range; index++){ //añado todos los archivos guardados en este dominio
+    for (let index = tracker.min_range; index <= tracker.max_range; index++) { //añado todos los archivos guardados en este dominio
       let arrayoffiles = tracker.diccionario[index];
-      if(typeof arrayoffiles === 'undefined') {  //chequeo que el dominio no este inicializado
+      if (typeof arrayoffiles === 'undefined') {  //chequeo que el dominio no este inicializado
         //arrayoffiles.forEach(element => { obj.body.fileCount += 1; });
         //console.log(index + ' ' + available);
-        if(available){
+        if (available) {
           availableRange.partition_end = index;
         } else {
           available = true;
@@ -268,16 +282,16 @@ function joinEvaluation(msg) {
           availableRange.partition_end = index;
         }
       } else {
-        if(available) {
+        if (available) {
           available = false;
           //console.log(availableRange);
-          response.availableSpaces.push({...availableRange});
+          response.availableSpaces.push({ ...availableRange });
           //console.log(response.availableSpaces);
         }
       }
     }
-    if(available) {
-      response.availableSpaces.push({...availableRange});
+    if (available) {
+      response.availableSpaces.push({ ...availableRange });
     }
     //console.log(response.availableSpaces);
     server.send(JSON.stringify(response), tracker.sig.port, tracker.sig.host);
