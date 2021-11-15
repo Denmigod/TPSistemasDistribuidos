@@ -56,7 +56,8 @@ function createTrackerServer(config) {
       count(msg);
     }
     if (obj.route.indexOf('join') != -1){
-      joinEvaluation(msg);
+      //joinEvaluation(msg);
+      console.log(obj);
     }
     if (obj.route.length == 46){ //longitud exacta de cualquier ruta del tipo file/{hash}
       search(msg);
@@ -82,8 +83,6 @@ function setStaticRange(config) {
   let partition_end = partitionSize + partition_begin;
   if (cantNodos == config.id)
     partition_end += 256 % cantNodos - 1;
-  if (config.id != 1)
-    partition_begin += 1; 
   let range = {
     partition_begin: partition_begin,
     partition_end: partition_end
@@ -297,6 +296,5 @@ function joinEvaluation(msg) {
 //console.log(parseInt(sha1('ArchivoPrueba.txt').slice(0,2),16));
 
 crearTracker();
-console.log(tracker.min_range + ' ' + tracker.max_range);
-
 //console.log(Object.fromEntries((tracker.diccionario[156]).entries()));
+join('localhost', 8080)
