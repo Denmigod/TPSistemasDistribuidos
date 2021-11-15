@@ -2,60 +2,70 @@ import ParticleBackground from "./components/ParticleBackground";
 import "../src/css/normalize.css";
 import "../src/css/skeleton.css";
 import "../src/css/App.css";
-import { Fragment, useState, useEffect } from "react";
-import Error from "./components/Error";
+import { Fragment, useState } from "react";
+
 import ListadoArchivos from "./components/ListadoArchivos";
-import Footer from "./components/Footer";
+
 import Formulario from "./components/Formulario";
+import Spineer from "./components/Spinner";
+import Swal from "sweetalert2";
 
 function App() {
   const [listado, setListado] = useState([
-    // { id: "", filename: "CSGO", filesize: "" },
-    // { id: "", filename: "Wow", filesize: "" },
-    // { id: "", filename: "Resident Evil 8", filesize: "" },
+    { id: "", filename: "CSGO", filesize: "" },
+    { id: "", filename: "Wow", filesize: "" },
+    { id: "", filename: "Resident Evil 8", filesize: "" },
+   
   ]);
-
+  const [showBackground, setshowBackground] = useState(false);
+  const [showSpinner, setShowSpinner] = useState(false);
   const [filename, setFilename] = useState("");
   const [filesize, setFilesize] = useState("");
   const [nodeIP, setNodeIP] = useState("");
   const [nodePort, setNodePort] = useState(0);
 
-  const [error, setError] = useState({
-    estado: false,
-    msg: "",
-  });
+ 
 
   const handleUpdate = () => {
     const callApi = async () => {
-      const answer = await fetch("http://localhost:5000/file", {
-        method: "GET",
-      });
-      const result = await answer.json();
-      console.log(result);
-      setListado(result);
-      setFilename("");
-      setFilesize("");
-      setNodeIP("");
-      setNodePort(0);
+      setShowSpinner(true);
+      try {
+        const answer = await fetch("http://localhost:5000/file", {
+          method: "GET",
+        });
+        const result = await answer.json();
+        console.log(result);
+        setShowSpinner(false);
+        setListado(result);
+        setFilename("");
+        setFilesize("");
+        setNodeIP("");
+        setNodePort(0);
+      } catch (error) {
+      
+        setShowSpinner(false);
+
+        Swal.fire({
+          icon: "error",
+          title: "Oops...",
+          text: "Error al buscar el listado!",
+        });
+      }
     };
     callApi();
   };
 
   const handleCarga = () => {
-    // if (filename === "" || !(filesize === "") || !(nodeIP === "") || !nodePort)
-    //   setError({ estado: true, msg: "Llene correctamente los campos" });
-    // else {
-    //   const cargaArchivo = {
-    //     filename,
-    //     filesize,
-    //     nodeIP,
-    //     nodePort,
-    //   };
-    //   setCargaArchivo(cargaArchivo);
-    // }
+   
     const callApi = async () => {
+      //Comprueba si no esta vacio el formulario
       if (filename === "" || filesize === "" || nodeIP === "" || nodePort === 0)
-        return;
+        return Swal.fire({
+          icon: "error",
+          title: "Oops...",
+          text: "Por favor llena los campos!",
+        });
+
       const Data = {
         filename,
         filesize,
@@ -64,6 +74,29 @@ function App() {
       };
 
       try {
+
+        // Muestra la alerta para esperar la respuesta
+        let timerInterval;
+        Swal.fire({
+          title: "Cargando archivo...",
+         
+          timer: 4000,
+          timerProgressBar: true,
+          didOpen: () => {
+            Swal.showLoading();
+            
+          },
+          willClose: () => {
+            clearInterval(timerInterval);
+          },
+        }).then((result) => {
+          
+          if (result.dismiss === Swal.DismissReason.timer) {
+            console.log("I was closed by the timer");
+          }
+        });
+
+       
         const answer = await fetch("http://localhost:5000/file", {
           method: "POST",
           headers: {
@@ -72,27 +105,40 @@ function App() {
           },
           body: JSON.stringify(Data),
         });
+       
+//En caso de exito muestra la alerta correspondiente
+        Swal.fire({
+          icon: "success",
+          title: "Se pudo cargar el archivo!",
+          showConfirmButton: false,
+          timer: 1500,
+        });
         console.log(JSON.stringify(Data));
         console.log(answer);
       } catch (error) {
-        console.log(error);
+        //En caso contrario muestra un mensaje de error al cliente
+     
+        Swal.fire({
+          icon: "error",
+          title: "Oops...",
+          text: "Error al cargar el archivo!",
+        });
       }
     };
     callApi();
   };
-
+  window.onload = () => {
+    setshowBackground(true);
+  };
   return (
     <Fragment>
-      <ParticleBackground />
+      {showBackground ? <ParticleBackground /> : null}
+
       <div className="container ">
         <div className="row">
           <h1 className="text-header">Cliente app</h1>
         </div>
-        <div className="row">
-          <button className="button-primary" onClick={handleUpdate}>
-            Actualizar Archivos
-          </button>
-        </div>
+      
         <div className="row">
           <Formulario
             setFilename={setFilename}
@@ -103,11 +149,14 @@ function App() {
           <button className="button-primary" onClick={handleCarga}>
             Cargar Archivo
           </button>
+          <button className="button-primary" onClick={handleUpdate}>
+            Actualizar Archivos
+          </button>
         </div>
-        {error.estado ? <Error error={error} /> : null}
-        <div className="container list-c">
-          <ListadoArchivos listado={listado} setError={setError} />
-        </div>
+        {showSpinner ? <Spineer /> : null}
+        {listado.length < 1 ? null : (
+          <ListadoArchivos listado={listado}  />
+        )}
       </div>
     </Fragment>
   );
