@@ -71,7 +71,6 @@ app.get("/file/", (req, res) => {
     res.send(listadoArchivos);
     listadoArchivos = [];
   }, 5000);
-
 });
 
 app.get(`/file/:hash`, (req, res) => {
@@ -84,18 +83,28 @@ app.get(`/file/:hash`, (req, res) => {
     originPort: config.port,
     body: {},
   });
-   console.log(msg);
+  console.log(msg);
   server.send(msg, config.direccionTracker.port, config.direccionTracker.host);
 
   setTimeout(() => {
     console.log("esperando datos para descargar torrent");
     let respuesta = msgArrays[indice];
-  console.log(respuesta);
+    console.log(respuesta);
     if (!respuesta) respuesta = [];
-  
-    res.send(JSON.stringify(respuesta));
-  }, 5000);
 
+    const fileContentName = `${respuesta.body.filename}.torrente`;
+
+    var contenido = {
+      fileContentName: `{"hash": "${hash}", "trackerIP": "${respuesta.body.trackerIP}", "trackerPort": "${respuesta.body.trackerPort}"}`,
+    };
+
+    res.set({
+      "Content-Disposition": `attachment; filename=${fileContentName}`,
+      "Content-Type": "text/plain",
+    });
+
+    res.send(contenido[fileContentName]);
+  }, 5000);
 });
 
 app.post("/file", (req, res) => {

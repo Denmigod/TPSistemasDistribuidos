@@ -12,10 +12,9 @@ import Swal from "sweetalert2";
 
 function App() {
   const [listado, setListado] = useState([
-    { id: "", filename: "CSGO", filesize: "" },
-    { id: "", filename: "Wow", filesize: "" },
-    { id: "", filename: "Resident Evil 8", filesize: "" },
-   
+    { id: "kasdsa3", filename: "CSGO", filesize: "" },
+    { id: "ds536a4", filename: "Wow", filesize: "" },
+    { id: "hgx4532", filename: "Resident Evil 8", filesize: "" },
   ]);
   const [showBackground, setshowBackground] = useState(false);
   const [showSpinner, setShowSpinner] = useState(false);
@@ -23,8 +22,6 @@ function App() {
   const [filesize, setFilesize] = useState("");
   const [nodeIP, setNodeIP] = useState("");
   const [nodePort, setNodePort] = useState(0);
-
- 
 
   const handleUpdate = () => {
     const callApi = async () => {
@@ -42,7 +39,6 @@ function App() {
         setNodeIP("");
         setNodePort(0);
       } catch (error) {
-      
         setShowSpinner(false);
 
         Swal.fire({
@@ -56,7 +52,6 @@ function App() {
   };
 
   const handleCarga = () => {
-   
     const callApi = async () => {
       //Comprueba si no esta vacio el formulario
       if (filename === "" || filesize === "" || nodeIP === "" || nodePort === 0)
@@ -74,29 +69,25 @@ function App() {
       };
 
       try {
-
         // Muestra la alerta para esperar la respuesta
         let timerInterval;
         Swal.fire({
           title: "Cargando archivo...",
-         
+
           timer: 4000,
           timerProgressBar: true,
           didOpen: () => {
             Swal.showLoading();
-            
           },
           willClose: () => {
             clearInterval(timerInterval);
           },
         }).then((result) => {
-          
           if (result.dismiss === Swal.DismissReason.timer) {
             console.log("I was closed by the timer");
           }
         });
 
-       
         const answer = await fetch("http://localhost:5000/file", {
           method: "POST",
           headers: {
@@ -105,8 +96,8 @@ function App() {
           },
           body: JSON.stringify(Data),
         });
-       
-//En caso de exito muestra la alerta correspondiente
+
+        //En caso de exito muestra la alerta correspondiente
         Swal.fire({
           icon: "success",
           title: "Se pudo cargar el archivo!",
@@ -117,7 +108,7 @@ function App() {
         console.log(answer);
       } catch (error) {
         //En caso contrario muestra un mensaje de error al cliente
-     
+
         Swal.fire({
           icon: "error",
           title: "Oops...",
@@ -138,7 +129,7 @@ function App() {
         <div className="row">
           <h1 className="text-header">Cliente app</h1>
         </div>
-      
+
         <div className="row">
           <Formulario
             setFilename={setFilename}
@@ -154,9 +145,7 @@ function App() {
           </button>
         </div>
         {showSpinner ? <Spineer /> : null}
-        {listado.length < 1 ? null : (
-          <ListadoArchivos listado={listado}  />
-        )}
+        {listado.length < 1 ? null : <ListadoArchivos listado={listado} />}
       </div>
     </Fragment>
   );
