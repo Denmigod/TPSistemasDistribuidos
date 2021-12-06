@@ -55,6 +55,9 @@ function createTrackerServer(config) {
     if (obj.route.indexOf('count') != -1){
       count(msg);
     }
+    if (obj.route.indexOf('join') != -1){
+      joinEvaluation(msg);
+    }
     if (obj.route.length == 46){ //longitud exacta de cualquier ruta del tipo file/{hash}
       search(msg);
     }
@@ -79,6 +82,8 @@ function setStaticRange(config) {
   let partition_end = partitionSize + partition_begin;
   if (cantNodos == config.id)
     partition_end += 256 % cantNodos - 1;
+  if (config.id != 1)
+    partition_begin += 1; 
   let range = {
     partition_begin: partition_begin,
     partition_end: partition_end
@@ -95,14 +100,16 @@ function search(msg) {
     let indexedfile = arrayoffiles.filter(function (fileinfo) { //filtra si existe un archivo con el mismo hash
       return fileinfo.hash == hash;
     });
+    let filename = indexedfile[0].filename;
+    let filesize = indexedfile[0].filesize;
     let peers = indexedfile[0].peers;
-    found(msg, hash, peers);
+    found(msg, hash, filename, filesize, peers);
   } else {
     server.send(msg, tracker.sig.port, tracker.sig.host);
   }
 }
 
-function found(msg, hash, peers){
+function found(msg, hash, filename, filesize, peers) {
   let obj = JSON.parse(msg);
   let response = {
     messageId: obj.messageId,
@@ -110,10 +117,12 @@ function found(msg, hash, peers){
     originIP: obj.originIP,
     originPort: obj.originPort,
     body: {
-        id: hash,
-        trackerIP: tracker.host,
-        trackerPort: tracker.port,
-        pares: peers
+      id: hash,
+      filename: filename,
+      filesize: filesize,
+      trackerIP: tracker.host,
+      trackerPort: tracker.port,
+      pares: peers
     }
   }
   server.send(JSON.stringify(response), obj.originPort, obj.originIP); //Envia lo encontrado al servidor
@@ -154,7 +163,7 @@ function store(msg) {
   if ((tracker.min_range <= index) && (tracker.max_range >= index)) {
     let filename = obj.body.filename;
     let filesize = obj.body.filesize;
-    let peer = { host: obj.body.parIP, port: obj.body.parPort };
+    let peer = { parIP: obj.body.parIP, parPort: obj.body.parPort };
     if (tracker.diccionario[index] == null) { //el dominio con ese indice se encuentra sin utilizar
         tracker.diccionario[index] = [{
           hash: hash,
@@ -218,10 +227,77 @@ function count(msg) {
   }
 }
 
+function join(host, port) {
+  let msg = {
+    messageId: `joinId=${tracker.id}`,
+    route: `/join/${tracker.id}`,
+    originIP: tracker.host,
+    originPort: tracker.port,
+    availableSpaces: []
+  }
+  server.send(JSON.stringify(msg), port, host);
+}
+
+function joinEvaluation(msg) {
+  let obj = JSON.parse(msg);
+  let response = { ...obj };
+  if(response.messageId.indexOf(`StartingId=${tracker.id}`) != -1) {  //ya se completo el recorrido de todos los trackers
+    server.send(JSON.stringify(response), response.originPort, response.originIP);
+    //console.log(response);
+  }
+  else {
+    if(response.messageId.length<=10){ //es el primer tracker que se marcara para recorrer todos los nodos scaneando
+      response.messageId += `StartingId=${tracker.id}`;
+    }
+    let available;
+    let availableRange = response.availableSpaces.pop();
+    if(availableRange && availableRange.partition_end==tracker.min_range-1) {  //hay un rango que podría continuar
+      available = true;
+      //console.log(availableRange);
+    }
+    else {  //sino comienzo a verificar por nuevos rangos en este nodo
+      if(availableRange)
+        response.availableSpaces.push({...availableRange});
+      available = false;
+      availableRange = {
+        partition_begin: 0,
+        partition_end: 0
+      };
+    }
+    for (let index=tracker.min_range; index<=tracker.max_range; index++){ //añado todos los archivos guardados en este dominio
+      let arrayoffiles = tracker.diccionario[index];
+      if(typeof arrayoffiles === 'undefined') {  //chequeo que el dominio no este inicializado
+        //arrayoffiles.forEach(element => { obj.body.fileCount += 1; });
+        //console.log(index + ' ' + available);
+        if(available){
+          availableRange.partition_end = index;
+        } else {
+          available = true;
+          availableRange.partition_begin = index;
+          availableRange.partition_end = index;
+        }
+      } else {
+        if(available) {
+          available = false;
+          //console.log(availableRange);
+          response.availableSpaces.push({...availableRange});
+          //console.log(response.availableSpaces);
+        }
+      }
+    }
+    if(available) {
+      response.availableSpaces.push({...availableRange});
+    }
+    //console.log(response.availableSpaces);
+    server.send(JSON.stringify(response), tracker.sig.port, tracker.sig.host);
+  }
+}
+
 //test sha1
 //console.log(sha1('ArchivoPrueba.txt'));
 //console.log(sha1('1').slice(0,2));
 //console.log(parseInt(sha1('ArchivoPrueba.txt').slice(0,2),16));
 
 crearTracker();
+//console.log(tracker.min_range + ' ' + tracker.max_range);
 //console.log(Object.fromEntries((tracker.diccionario[156]).entries()));

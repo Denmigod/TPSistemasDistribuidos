@@ -17,8 +17,8 @@ function createPeer() {
         files: new Map(),
         client: client,
         clientPort: config.clientPort,
-        trackerHost: config.trackerHost,
-        trackerPort: config.trackerPort
+        //trackerHost: config.trackerHost,
+        //trackerPort: config.trackerPort
     };
     createPeerServer(config);
     createPeerClient(config);
@@ -62,7 +62,15 @@ function createPeerClient(config) {
         let obj = JSON.parse(msg);
         if (obj.route.indexOf('found') != -1) {
             //count(msg);
-            console.log(obj);
+            //console.log(obj.body.pares);
+            let torrent = { 
+                hash: obj.body.id,
+                filename: obj.body.filename,
+                port: obj.body.pares[0].parPort, 
+                address: obj.body.pares[0].parIP
+            }
+            console.log(torrent);
+            //downloadFile(torrent);
         }
     });
 
@@ -90,21 +98,21 @@ function requestTorrentDownload() {
         rl.close();
     });
     rl.on("close", function () {
-        downloadFile(torrent);
+        requestTorrentInformation(torrent);
     });
 }
 
-function requestTorrentInformation(filename, filesize) {
-    let hash = sha1(filename + filesize);
+function requestTorrentInformation(torrent) {
+    let hash = torrent.hash;
     let msg = {
-        messageId: `searchPeer${config.id}`,
+        messageId: `searchPeer${par.id}`,
         route: `/file/${hash}`,
         originIP: par.host,
         originPort: par.clientPort,
         body: {}
     }
-    console.log(par.clientPort);
-    client.send(JSON.stringify(msg), par.trackerPort, par.trackerHost);
+    //console.log(par.clientPort);
+    client.send(JSON.stringify(msg), torrent.port, torrent.host);
 }
 
 function downloadFile(torrent) {
@@ -126,13 +134,26 @@ function downloadFile(torrent) {
     });
     client.on('end', () => {
         const file = Buffer.concat(chunks);
-
-        fs.writeFile('message.jpg', file, (err) => {
+        fs.writeFile(torrent.filename, file, (err) => {
             if (err) throw err;
             console.log('The file has been saved!');
         });
         console.log('disconnected from server');
     });
+}
+
+function addExistingFile(filename, filesize) {
+    let hash = sha1(filename + filesize);
+    let msg = {
+        messageId: `addParId=${par.id}`,
+        route: `/file/${hash}/addPar`,
+        id: hash,
+        filename: filename,
+        filesize: filesize,
+        parIP: par.host,
+        parPort: par.port,
+    }
+    client.send(JSON.stringify(msg), par.trackerPort, par.trackerHost);
 }
 
 function addFile(filename, filesize) {
@@ -151,4 +172,6 @@ addFile('daemon0.jpg', 213056);
 //addFile('archivoprueba2.txt',2);
 //console.log(par.files);
 //console.log(par.files.get('15be7e8342476cb6661f16e7f5378b0bc0b20f20'));
-requestTorrentInformation('da igual hay que modificar la funcion', 3);
+
+//requestTorrentInformation('da igual hay que modificar la funcion', 3);
+requestTorrentDownload();
