@@ -30,11 +30,12 @@ function createTrackerServer(config) {
       listadoArchivos = obj.body.files;
     }
 
-    if (obj.route.indexOf("search") != -1) {
+    if (obj.route.indexOf("found") != -1) {
       //obtener el indice parseando el messageId
-      let indice = obj.messageId.slice(5);
+      let indice = obj.messageId.slice(6);
       msgArrays[indice] = {
         hash: obj.body.id,
+        filename: obj.body.filename,
         trackerIP: obj.body.trackerIP,
         trackerPort: obj.body.trackerPort,
       };
@@ -83,27 +84,27 @@ app.get(`/file/:hash`, (req, res) => {
     originPort: config.port,
     body: {},
   });
-  console.log(msg);
+  //console.log(msg);
   server.send(msg, config.direccionTracker.port, config.direccionTracker.host);
 
   setTimeout(() => {
     console.log("esperando datos para descargar torrent");
     let respuesta = msgArrays[indice];
-    console.log(respuesta);
     if (!respuesta) respuesta = [];
-
-    const fileContentName = `${respuesta.body.filename}.torrente`;
-
-    var contenido = {
-      fileContentName: `{"hash": "${hash}", "trackerIP": "${respuesta.body.trackerIP}", "trackerPort": "${respuesta.body.trackerPort}"}`,
-    };
-
+    const fileContentName = `${respuesta.filename}.torrente`;
+    /*
+    let contenido = {
+      fileContentName: `{"hash": "${hash}", "trackerIP": "${respuesta.trackerIP}", "trackerPort": "${respuesta.trackerPort}"}`,
+    };*/
+    let contenido = `{"hash": "${hash}", "trackerIP": "${respuesta.trackerIP}", "trackerPort": "${respuesta.trackerPort}"}`
+    console.log(contenido);
     res.set({
       "Content-Disposition": `attachment; filename=${fileContentName}`,
       "Content-Type": "text/plain",
     });
 
-    res.send(contenido[fileContentName]);
+    res.send(contenido);
+    //res.send(contenido[fileContentName]);
   }, 5000);
 });
 

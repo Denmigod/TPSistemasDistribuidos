@@ -12,9 +12,11 @@ import Swal from "sweetalert2";
 
 function App() {
   const [listado, setListado] = useState([
+    /*
     { id: "kasdsa3", filename: "CSGO", filesize: "" },
     { id: "ds536a4", filename: "Wow", filesize: "" },
     { id: "hgx4532", filename: "Resident Evil 8", filesize: "" },
+    */
   ]);
   const [showBackground, setshowBackground] = useState(false);
   const [showSpinner, setShowSpinner] = useState(false);

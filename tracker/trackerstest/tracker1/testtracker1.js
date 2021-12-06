@@ -120,8 +120,6 @@ function scan(msg) {
   if(response.messageId == `scanId=${tracker.id}`) {  //ya se completo el recorrido de todos los trackers
     //ES EL PRIMER TRACKER Y DEBERIA RESPONDER AL SERVER, PERO FALTA HACER ESA CONEXIÓN
     server.send(JSON.stringify(response), response.originPort, response.originIP);
-    console.log(response);
-    console.log(response.body);
   }
   else {
     if(response.messageId.length<=7){ //es el primer tracker que se marcara para recorrer todos los nodos scaneando
@@ -279,6 +277,7 @@ function joinEvaluation(msg) {
 crearTracker();
 //console.log(tracker.min_range + ' ' + tracker.max_range);
 
+/*
 store(JSON.stringify(
   {
     route: "/file/fe9635d7a6ae44389f6480e13fee5b0127ed86be/store",
@@ -369,6 +368,7 @@ store(JSON.stringify(
     }
   }
 ));
+*/
 
 //SEARCH FUNCIONA CORRECTAMENTE
 /*

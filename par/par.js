@@ -112,7 +112,7 @@ function requestTorrentInformation(torrent) {
         body: {}
     }
     //console.log(par.clientPort);
-    client.send(JSON.stringify(msg), torrent.port, torrent.host);
+    client.send(JSON.stringify(msg), torrent.trackerPort, torrent.trackerIP);
 }
 
 function downloadFile(torrent) {
