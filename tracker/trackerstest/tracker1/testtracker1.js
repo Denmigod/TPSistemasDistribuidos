@@ -86,14 +86,16 @@ function search(msg) {
     let indexedfile = arrayoffiles.filter(function (fileinfo) { //filtra si existe un archivo con el mismo hash
       return fileinfo.hash == hash;
     });
+    let filename = indexedfile[0].filename;
+    let filesize = indexedfile[0].filesize;
     let peers = indexedfile[0].peers;
-    found(msg, hash, peers);
+    found(msg, hash, filename, filesize, peers);
   } else {
     server.send(msg, tracker.sig.port, tracker.sig.host);
   }
 }
 
-function found(msg, hash, peers){
+function found(msg, hash, filename, filesize, peers) {
   let obj = JSON.parse(msg);
   let response = {
     messageId: obj.messageId,
@@ -101,10 +103,12 @@ function found(msg, hash, peers){
     originIP: obj.originIP,
     originPort: obj.originPort,
     body: {
-        id: hash,
-        trackerIP: tracker.host,
-        trackerPort: tracker.port,
-        pares: peers
+      id: hash,
+      filename: filename,
+      filesize: filesize,
+      trackerIP: tracker.host,
+      trackerPort: tracker.port,
+      pares: peers
     }
   }
   server.send(JSON.stringify(response), obj.originPort, obj.originIP); //Envia lo encontrado al servidor
@@ -148,7 +152,7 @@ function store(msg) {
   if ((tracker.min_range <= index) && (tracker.max_range >= index)) {
     let filename = obj.body.filename;
     let filesize = obj.body.filesize;
-    let peer = { host: obj.body.parIP, port: obj.body.parPort };
+    let peer = { parIP: obj.body.parIP, parPort: obj.body.parPort };
     if (tracker.diccionario[index] == null) { //el dominio con ese indice se encuentra sin utilizar
         tracker.diccionario[index] = [{
           hash: hash,
@@ -201,6 +205,7 @@ function count(msg) {
         arrayoffiles.forEach(element => { obj.body.fileCount += 1; });
       }
     }
+    console.log(response);
     server.send(JSON.stringify(response), tracker.sig.port, tracker.sig.host);
   }
 }
@@ -272,7 +277,7 @@ function joinEvaluation(msg) {
 }
 
 crearTracker();
-console.log(tracker.min_range + ' ' + tracker.max_range);
+//console.log(tracker.min_range + ' ' + tracker.max_range);
 
 store(JSON.stringify(
   {
@@ -349,18 +354,34 @@ store(JSON.stringify(
   }
 ));
 
+//ARCHIVO JINX
+store(JSON.stringify(
+  {
+    route: "/file/4b95a7a67584526aaf1c984aa32a698bd73e9706/store",
+    //originIP: str,???
+    //originPort: int,???
+    body: {
+        id: '4b95a7a67584526aaf1c984aa32a698bd73e9706',
+        filename: 'jinx.png',
+        filesize: 6063000,
+        parIP: 'localhost',
+        parPort: 4000
+    }
+  }
+));
+
 //SEARCH FUNCIONA CORRECTAMENTE
 /*
 search(JSON.stringify(
   {
       messageId: 'search00001',
-      route: '/file/fe9635d7a6ae44389f6480e13fee5b0127ed86be',
+      route: '/file/00333337a6ae44389f6480e13fee5b0127ed86be',
       originIP: 'localhost',
       originPort: 5000,
       body: {}
   }
 ));
-*/
+
 
 scan(JSON.stringify(
   {
@@ -374,7 +395,7 @@ scan(JSON.stringify(
   }
 ));
 
-/*
+
 count(JSON.stringify(
   {
     messageId: 'countId=',

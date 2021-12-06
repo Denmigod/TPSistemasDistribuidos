@@ -61,8 +61,13 @@ function createPeerClient(config) {
         const remotePort = info.port;
         let obj = JSON.parse(msg);
         if (obj.route.indexOf('found') != -1) {
-            //count(msg);
-            console.log(obj);
+            let torrent = { 
+                hash: obj.body.id,
+                filename: obj.body.filename,
+                port: obj.body.pares[0].parPort, 
+                address: obj.body.pares[0].parIP
+            }
+            downloadFile(torrent);
         }
     });
 
@@ -90,21 +95,21 @@ function requestTorrentDownload() {
         rl.close();
     });
     rl.on("close", function () {
-        downloadFile(torrent);
+        requestTorrentInformation(torrent);
     });
 }
 
-function requestTorrentInformation(filename, filesize) {
-    let hash = sha1(filename + filesize);
+function requestTorrentInformation(torrent) {
+    let hash = torrent.hash;
     let msg = {
-        messageId: `searchPeer${config.id}`,
+        messageId: `searchPeer${par.id}`,
         route: `/file/${hash}`,
         originIP: par.host,
         originPort: par.clientPort,
         body: {}
     }
-    console.log(par.clientPort);
-    client.send(JSON.stringify(msg), par.trackerPort, par.trackerHost);
+    //console.log(par.clientPort);
+    client.send(JSON.stringify(msg), torrent.port, torrent.host);
 }
 
 function downloadFile(torrent) {
@@ -126,8 +131,7 @@ function downloadFile(torrent) {
     });
     client.on('end', () => {
         const file = Buffer.concat(chunks);
-
-        fs.writeFile('message.jpg', file, (err) => {
+        fs.writeFile(torrent.filename, file, (err) => {
             if (err) throw err;
             console.log('The file has been saved!');
         });

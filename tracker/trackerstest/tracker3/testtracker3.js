@@ -100,14 +100,16 @@ function search(msg) {
     let indexedfile = arrayoffiles.filter(function (fileinfo) { //filtra si existe un archivo con el mismo hash
       return fileinfo.hash == hash;
     });
+    let filename = indexedfile[0].filename;
+    let filesize = indexedfile[0].filesize;
     let peers = indexedfile[0].peers;
-    found(msg, hash, peers);
+    found(msg, hash, filename, filesize, peers);
   } else {
     server.send(msg, tracker.sig.port, tracker.sig.host);
   }
 }
 
-function found(msg, hash, peers){
+function found(msg, hash, filename, filesize, peers) {
   let obj = JSON.parse(msg);
   let response = {
     messageId: obj.messageId,
@@ -115,15 +117,15 @@ function found(msg, hash, peers){
     originIP: obj.originIP,
     originPort: obj.originPort,
     body: {
-        id: hash,
-        trackerIP: tracker.host,
-        trackerPort: tracker.port,
-        pares: peers
+      id: hash,
+      filename: filename,
+      filesize: filesize,
+      trackerIP: tracker.host,
+      trackerPort: tracker.port,
+      pares: peers
     }
   }
   server.send(JSON.stringify(response), obj.originPort, obj.originIP); //Envia lo encontrado al servidor
-  //console.log(response);
-  //console.log(response.body);
 }
 
 function scan(msg) {
@@ -161,7 +163,7 @@ function store(msg) {
   if ((tracker.min_range <= index) && (tracker.max_range >= index)) {
     let filename = obj.body.filename;
     let filesize = obj.body.filesize;
-    let peer = { host: obj.body.parIP, port: obj.body.parPort };
+    let peer = { parIP: obj.body.parIP, parPort: obj.body.parPort };
     if (tracker.diccionario[index] == null) { //el dominio con ese indice se encuentra sin utilizar
         tracker.diccionario[index] = [{
           hash: hash,
@@ -297,6 +299,6 @@ function joinEvaluation(msg) {
 //console.log(parseInt(sha1('ArchivoPrueba.txt').slice(0,2),16));
 
 crearTracker();
-console.log(tracker.min_range + ' ' + tracker.max_range);
+//console.log(tracker.min_range + ' ' + tracker.max_range);
 
 //console.log(Object.fromEntries((tracker.diccionario[156]).entries()));
