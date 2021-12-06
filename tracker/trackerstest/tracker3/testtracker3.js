@@ -189,17 +189,8 @@ function store(msg) {
           }
         );
       }
-
-      //REVISAR
-      //https://code.tutsplus.com/es/tutorials/how-to-use-map-filter-reduce-in-javascript--cms-26209
-
-
-      //tracker.diccionario[index] = new Map(Object.entries({mapobject}));
     }
-    //BORRAR
-    //console.log(Object.fromEntries((tracker.diccionario[254]).entries()));
-    //console.log(tracker.diccionario[254][0]);
-    //console.log(tracker.diccionario[254][1]);
+    server.send(msg, obj.originPort, obj.originIP); //envio respuesta a quien pidio el store
   }
   else if ((tracker.sig.port != null) && (tracker.sig.host != null)) {
     server.send(msg, tracker.sig.port, tracker.sig.host);

@@ -29,10 +29,16 @@ function createTrackerServer(config) {
     if (obj.route.indexOf("scan") != -1) {
       listadoArchivos = obj.body.files;
     }
-
+    if (obj.route.indexOf("store") != -1) {
+      //console.log(obj);
+      let indice = obj.messageId.slice(5);
+      console.log(indice);
+      msgArrays[indice] = { ...obj };
+    }
     if (obj.route.indexOf("found") != -1) {
       //obtener el indice parseando el messageId
       let indice = obj.messageId.slice(6);
+      console.log(indice);
       msgArrays[indice] = {
         hash: obj.body.id,
         filename: obj.body.filename,
@@ -40,11 +46,6 @@ function createTrackerServer(config) {
         trackerPort: obj.body.trackerPort,
       };
     }
-    // server.send(
-    //   "Stored succesfull in node " + config.id,
-    //   remotePort,
-    //   remoteAddress
-    // );
   });
 
   server.on("listening", function () {
@@ -90,37 +91,37 @@ app.get(`/file/:hash`, (req, res) => {
   setTimeout(() => {
     console.log("esperando datos para descargar torrent");
     let respuesta = msgArrays[indice];
-    if (!respuesta) respuesta = [];
-    const fileContentName = `${respuesta.filename}.torrente`;
-    /*
-    let contenido = {
-      fileContentName: `{"hash": "${hash}", "trackerIP": "${respuesta.trackerIP}", "trackerPort": "${respuesta.trackerPort}"}`,
-    };*/
-    let contenido = `{"hash": "${hash}", "trackerIP": "${respuesta.trackerIP}", "trackerPort": "${respuesta.trackerPort}"}`
-    console.log(contenido);
-    res.set({
-      "Content-Disposition": `attachment; filename=${fileContentName}`,
-      "Content-Type": "text/plain",
-    });
-
-    res.send(contenido);
-    //res.send(contenido[fileContentName]);
+    if (!respuesta) {
+      respuesta = [];
+      res.status(500).send("Hubo un problema");
+    } else {
+      const fileContentName = `${respuesta.filename}.torrente`;
+      /*
+      let contenido = {
+        fileContentName: `{"hash": "${hash}", "trackerIP": "${respuesta.trackerIP}", "trackerPort": "${respuesta.trackerPort}"}`,
+      };*/
+      let contenido = `{"hash": "${hash}", "trackerIP": "${respuesta.trackerIP}", "trackerPort": "${respuesta.trackerPort}"}`
+      console.log(contenido);
+      res.set({
+        "Content-Disposition": `attachment; filename=${fileContentName}`,
+        "Content-Type": "text/plain",
+      });
+      res.send(contenido);
+      //res.send(contenido[fileContentName]);
+    }
   }, 5000);
 });
 
 app.post("/file", (req, res) => {
+  const indice = contadorMSG++;
   console.log("receiving data ...");
   console.log(req.body);
-
-  //   body: {
-  //     filename: str,
-  //     filesize: int,
-  //     nodeIP: str,
-  //     nodePort: int
-  // }
   let hash = sha1(req.body.filename + req.body.filesize);
   const msg = JSON.stringify({
+    messageId: `store${indice}`,
     route: `/file/${hash}/store`,
+    originIP: config.host,
+    originPort: config.port,
     body: {
       id: hash,
       filename: req.body.filename,
@@ -131,8 +132,25 @@ app.post("/file", (req, res) => {
   });
 
   server.send(msg, config.direccionTracker.port, config.direccionTracker.host);
-  res.status(200);
-  res.send("Lo envio correctamente");
+
+  setTimeout(() => {
+    let respuesta = msgArrays[indice];
+    //console.log(respuesta);
+    console.log(msgArrays);
+    if (!respuesta) {
+      respuesta = [];
+      console.log('paso algo');
+      res.status(500).send("Hubo un problema");
+      
+    } else {
+      if (respuesta.route.indexOf("store") != -1) {
+        
+        res.status(200);
+        res.send("Lo envio correctamente");
+      }
+    }
+  }, 5000);
+
 });
 
 app.listen(port, () => {

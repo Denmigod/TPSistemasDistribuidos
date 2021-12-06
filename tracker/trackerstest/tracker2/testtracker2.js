@@ -31,20 +31,6 @@ function createTrackerServer(config) {
   server.on('message', function (msg, info) {
     const remoteAddress = info.address;
     const remotePort = info.port;
-
-    //FUNCION STORE
-    /*
-    let obj = JSON.parse(msg);
-    let hash = obj.body.id;
-    let index = parseInt(hash.slice(0, 2), 16);
-    if (obj.route.indexOf('store') != -1 && ((tracker.min_range <= index) && (tracker.max_range >= index))) {
-      let filename = obj.body.filename;
-      let filesize = obj.body.filesize;
-      let peers = { host: obj.body.parIP, port: obj.body.parPort };
-      storeLocal(filename, filesize, peers);
-      console.log(Object.fromEntries((tracker.diccionario[156]).entries())); //BORRAR
-      //server.send('Stored succesfull in node ' + config.id, remotePort, remoteAddress);
-    }*/
     let obj = JSON.parse(msg);
     if (obj.route.indexOf('store') != -1){
       store(msg);
@@ -70,10 +56,6 @@ function createTrackerServer(config) {
 
   server.bind(config.port);
 }
-
-/*function sendData(msg, port, adress){
-  server.send(msg, port, adress);
-}*/
 
 function setStaticRange(config) {
   let cantNodos = config.cantNodos;
@@ -189,17 +171,8 @@ function store(msg) {
           }
         );
       }
-
-      //REVISAR
-      //https://code.tutsplus.com/es/tutorials/how-to-use-map-filter-reduce-in-javascript--cms-26209
-
-
-      //tracker.diccionario[index] = new Map(Object.entries({mapobject}));
     }
-    //BORRAR
-    //console.log(Object.fromEntries((tracker.diccionario[254]).entries()));
-    //console.log(tracker.diccionario[254][0]);
-    //console.log(tracker.diccionario[254][1]);
+    server.send(msg, obj.originPort, obj.originIP); //envio respuesta a quien pidio el store
   }
   else if ((tracker.sig.port != null) && (tracker.sig.host != null)) {
     server.send(msg, tracker.sig.port, tracker.sig.host);

@@ -7,14 +7,13 @@ var server;
 function crearTracker() {
   let config = require("./inicialConfig.json");
 
-  let range = setStaticRange(config); //deberían comenzar por el nodo 1
+  let range = setStaticRange(config);
 
   tracker = {
     ant: config.direcciones.ant,
     sig: config.direcciones.sig,
     min_range: range.partition_begin,
     max_range: range.partition_end,
-    //diccionario: new Map(),
     diccionario: [],
     id: config.id,
     host: config.host,
@@ -31,20 +30,6 @@ function createTrackerServer(config) {
   server.on('message', function (msg, info) {
     const remoteAddress = info.address;
     const remotePort = info.port;
-
-    //FUNCION STORE
-    /*
-    let obj = JSON.parse(msg);
-    let hash = obj.body.id;
-    let index = parseInt(hash.slice(0, 2), 16);
-    if (obj.route.indexOf('store') != -1 && ((tracker.min_range <= index) && (tracker.max_range >= index))) {
-      let filename = obj.body.filename;
-      let filesize = obj.body.filesize;
-      let peers = { host: obj.body.parIP, port: obj.body.parPort };
-      storeLocal(filename, filesize, peers);
-      console.log(Object.fromEntries((tracker.diccionario[156]).entries())); //BORRAR
-      //server.send('Stored succesfull in node ' + config.id, remotePort, remoteAddress);
-    }*/
     let obj = JSON.parse(msg);
     if (obj.route.indexOf('addPar') != -1) {
       let peerStoreMessage = JSON.stringify(
@@ -75,7 +60,6 @@ function createTrackerServer(config) {
     if (obj.route.length == 46) { //longitud exacta de cualquier ruta del tipo file/{hash}
       search(msg);
     }
-    //server.send('Stored succesfull in node ' + config.id, remotePort, remoteAddress);
   });
 
   server.on('listening', function () {
@@ -84,10 +68,6 @@ function createTrackerServer(config) {
 
   server.bind(config.port);
 }
-
-/*function sendData(msg, port, adress){
-  server.send(msg, port, adress);
-}*/
 
 function setStaticRange(config) {
   let cantNodos = config.cantNodos;
@@ -205,10 +185,7 @@ function store(msg) {
         );
       }
     }
-    //BORRAR
-    //console.log(Object.fromEntries((tracker.diccionario[254]).entries()));
-    //console.log(tracker.diccionario[254][0]);
-    //console.log(tracker.diccionario[254][1]);
+    server.send(msg, obj.originPort, obj.originIP); //envio respuesta a quien pidio el store
   }
   else if ((tracker.sig.port != null) && (tracker.sig.host != null)) {
     server.send(msg, tracker.sig.port, tracker.sig.host);
@@ -252,7 +229,6 @@ function joinEvaluation(msg) {
   let response = { ...obj };
   if (response.messageId.indexOf(`StartingId=${tracker.id}`) != -1) {  //ya se completo el recorrido de todos los trackers
     server.send(JSON.stringify(response), response.originPort, response.originIP);
-    //console.log(response);
   }
   else {
     if (response.messageId.length <= 10) { //es el primer tracker que se marcara para recorrer todos los nodos scaneando
@@ -262,7 +238,6 @@ function joinEvaluation(msg) {
     let availableRange = response.availableSpaces.pop();
     if (availableRange && availableRange.partition_end == tracker.min_range - 1) {  //hay un rango que podría continuar
       available = true;
-      //console.log(availableRange);
     }
     else {  //sino comienzo a verificar por nuevos rangos en este nodo
       if (availableRange)
@@ -276,8 +251,6 @@ function joinEvaluation(msg) {
     for (let index = tracker.min_range; index <= tracker.max_range; index++) { //añado todos los archivos guardados en este dominio
       let arrayoffiles = tracker.diccionario[index];
       if (typeof arrayoffiles === 'undefined') {  //chequeo que el dominio no este inicializado
-        //arrayoffiles.forEach(element => { obj.body.fileCount += 1; });
-        //console.log(index + ' ' + available);
         if (available) {
           availableRange.partition_end = index;
         } else {
@@ -288,30 +261,15 @@ function joinEvaluation(msg) {
       } else {
         if (available) {
           available = false;
-          //console.log(availableRange);
           response.availableSpaces.push({ ...availableRange });
-          //console.log(response.availableSpaces);
         }
       }
     }
     if (available) {
       response.availableSpaces.push({ ...availableRange });
     }
-    //console.log(response.availableSpaces);
     server.send(JSON.stringify(response), tracker.sig.port, tracker.sig.host);
   }
 }
 
-//test sha1
-//console.log(sha1('ArchivoPrueba.txt'));
-//console.log(sha1('1').slice(0,2));
-//console.log(parseInt(sha1('ArchivoPrueba.txt').slice(0,2),16));
-
 crearTracker();
-//storeLocal('ArchivoPrueba.txt', 3, { host: 'hostprueba', port: 3001 });
-//storeLocal('ArchivoPrueba.txt', 3, { host: 'hostpruebados', port: 3002 });
-//store('ArchivoPrueba.txt',3,[{ host: 'hostpruebados', port: 3002 }, { host: 'hostpruebatres', port: 3003 }]);
-//preguntar si es posible dar de alta dos pares para un archivo al mismo tiempo => por ahora suponemos que no
-//console.log(Object.fromEntries((tracker.diccionario[67]).entries()));
-//console.log(Object.fromEntries((tracker.diccionario[156]).entries()));
-//console.log(tracker.min_range + ' ' + tracker.max_range);

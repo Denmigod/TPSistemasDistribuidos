@@ -176,9 +176,8 @@ function store(msg) {
           }
         );
       }
-      //REVISAR
-      //https://code.tutsplus.com/es/tutorials/how-to-use-map-filter-reduce-in-javascript--cms-26209
     }
+    server.send(msg, obj.originPort, obj.originIP); //envio respuesta a quien pidio el store
   }
   else if ((tracker.sig.port != null) && (tracker.sig.host != null)) {
     server.send(msg, tracker.sig.port, tracker.sig.host);
@@ -190,7 +189,6 @@ function count(msg) {
   let response = { ...obj };
   if(response.messageId == `countId=${tracker.id}`) {  //ya se completo el recorrido de todos los trackers
     server.send(JSON.stringify(response), response.originPort, response.originIP);
-    console.log(response);  //BORRAR
   }
   else {
     if(response.messageId.length<=8){ //es el primer tracker que se marcara para recorrer todos los nodos scaneando
@@ -203,7 +201,6 @@ function count(msg) {
         arrayoffiles.forEach(element => { obj.body.fileCount += 1; });
       }
     }
-    console.log(response);
     server.send(JSON.stringify(response), tracker.sig.port, tracker.sig.host);
   }
 }

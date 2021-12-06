@@ -83,21 +83,53 @@ function loadJSON(file) {
     return JSON.parse(data);
 }
 
-function requestTorrentDownload() {
+function openTrackerTerminal() {
     let torrent;
     const readline = require("readline");
     const rl = readline.createInterface({
         input: process.stdin,
-        output: process.stdout
+        output: process.stdout,
+        terminal: false
     });
-    rl.question('Escriba el nombre del torrent que desea utilizar', function (name) {
-        torrent = loadJSON(`./${name}`);
-        rl.close();
-    });
-    rl.on("close", function () {
-        requestTorrentInformation(torrent);
+    console.clear();
+    console.log(`MENU - PAR ${par.id}\n 
+                (1) Descargar un torrente.\n 
+                (2) Agregar un archivo a este par.\n
+                (3) Guardar un archivo existente para este par en los trackers.\n
+                (exit) Cerrar el par`);
+    rl.on("line", (input) => {
+        switch (input) {
+            case "1":
+                rl.question('Escriba el nombre del torrent que desea utilizar:\n', function (name) {
+                    torrent = loadJSON(`./${name}`);
+                    requestTorrentInformation(torrent);
+                });
+                break;
+            case "2":
+                rl.question('Escriba el nombre y el tamaño del archivo separado por ":" para agregarlo a la lista de archivos del par:\n', (text) => {
+                    const arrayText = text.split(":");
+                    const filename = arrayText[0]
+                    const filesize = Number(arrayText[1])
+                    addFile(filename, filesize);
+                });
+                break;
+            case "3":
+                rl.question('Escriba el nombre y el tamaño del archivo separado por ":" que desea a los trackers:\n', (text) => {
+                    const arrayText = text.split(":");
+                    const filename = arrayText[0]
+                    const filesize = Number(arrayText[1])
+                    addExistingFile(filename, filesize);
+                });
+                break;
+            case "exit":
+                rl.close();
+                server.close();
+                client.close();
+                break;
+        }
     });
 }
+
 
 function requestTorrentInformation(torrent) {
     let hash = torrent.hash;
@@ -151,8 +183,8 @@ function addFile(filename, filesize) {
 
 createPeer();
 //requestTorrentDownload();
-requestTorrentDownload();
-
+//requestTorrentDownload();
+openTrackerTerminal();
 /*
 const client = net.connect({ port: 3000, address: 'localhost' }, () => {
     // 'connect' listener
