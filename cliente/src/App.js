@@ -56,7 +56,7 @@ function App() {
   const handleCarga = () => {
     const callApi = async () => {
       //Comprueba si no esta vacio el formulario
-      if (filename === "" || filesize === "" || nodeIP === "" || nodePort === 0)
+      if (filename === "" || filesize === "" || nodeIP === "" || nodePort === '')
         return Swal.fire({
           icon: "error",
           title: "Oops...",
