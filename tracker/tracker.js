@@ -150,7 +150,7 @@ function scan(msg) {
   }
 }
 
-//SOPORTA LA REPETICIÓN ERRONEA DEL INGRESO DE LA INFORMACION DE UN PAR PARA UN ARCHIVO REPETIDO?
+
 function store(msg) {
   let obj = JSON.parse(msg);
   let hash = obj.body.id; //se supone que ya viene el hash en el mensaje

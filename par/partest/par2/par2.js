@@ -181,6 +181,20 @@ function addFile(filename, filesize) {
     //console.log(hash);
 }
 
+function addExistingFile(filename, filesize) {
+    let hash = sha1(filename + filesize);
+    let msg = {
+        messageId: `addParId=${par.id}`,
+        route: `/file/${hash}/addPar`,
+        id: hash,
+        filename: filename,
+        filesize: filesize,
+        parIP: par.host,
+        parPort: par.port,
+    }
+    client.send(JSON.stringify(msg), par.trackerPort, par.trackerHost);
+}
+
 createPeer();
 //requestTorrentDownload();
 //requestTorrentDownload();
